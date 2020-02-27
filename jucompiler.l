@@ -23,12 +23,12 @@
 
 ID                                      ([A-Za-z_$][0-9A-Za-z_$]*)
 RESERVED                                (abstract|continue|for|new|switch|assert|default|goto|synchronized|boolean|do|if|private|this|break|double|implements|protected|throw|byte|else|import|throws|case|enum|instanceof|return|transient|catch|extends|int|short|try|char|final|interface|var|finally|long|strictfp|const|float|native|super|volatile|"++"|"--"|null|Integer|System)
-INT                                     ([0-9]|(([1-9]+[\_]*)+[0-9]))
+INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])*)
 /*REALLIT                               (([0-9]*\.[0-9]+)|([0-9]+\.)|([1-9]\.)|//[1-9]+)*/
-REALPONTO ([0-9\.]|(([1-9]+[\_]*)+[0-9\.]))([0-9]|(([1-9]+[\_]*)+[0-9]))?(([e|E])("+"|"-")?(([0-9]*[\_]*)+[0-9]+)*)?
-REALFRAC (\.[0-9]|\.(([1-9]+[\_]*)+[0-9]))(([e|E])("+"|"-")?(([0-9]*[\_]*)+[0-9]+)*)?
-REALINTEIRO ([0-9]|(([1-9]+[\_]*)+[0-9]))(([e|E])("+"|"-")?(([0-9]*[\_]*)+[0-9]+)*)?
-EXPOENTE (([e|E])("+"|"-")?(([0-9]*[\_]*)+[0-9]+)*)
+REALPONTO ([0-9]\.|([1-9]+[0-9_]*[0-9]\.)*)([0-9]|([0-9]+[0-9_]*[0-9])*)?(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
+REALFRAC (\.[0-9]|\.([0-9]+[0-9_]*[0-9])*)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
+REALINTEIRO ([0-9]|([1-9]+[0-9_]*[0-9])*)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
+EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 
 
 %X COMMENT
@@ -37,7 +37,7 @@ EXPOENTE (([e|E])("+"|"-")?(([0-9]*[\_]*)+[0-9]+)*)
 
 %%
 
-" "                                     {   total_columns += strlen(yytext);};
+" "                                     {  total_columns += strlen(yytext);};
 "\t"                                    {  total_columns += strlen(yytext); };
 "\n"                                    {  ++total_lines; total_columns=1;};
 "\r"                                    {  ++total_lines; total_columns=1;};
