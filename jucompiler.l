@@ -22,7 +22,7 @@
 %}
 
 ID                                      ([A-Za-z_$][0-9A-Za-z_$]*)
-RESERVED                                (abstract|continue|for|new|switch|assert|default|goto|synchronized|boolean|do|if|private|this|break|double|implements|protected|throw|byte|else|import|throws|case|enum|instanceof|return|transient|catch|extends|int|short|try|char|final|interface|var|finally|long|strictfp|const|float|native|super|volatile|"++"|"--"|null|Integer|System)
+RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System|"_")
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])*)
 /*REALLIT                               (([0-9]*\.[0-9]+)|([0-9]+\.)|([1-9]\.)|//[1-9]+)*/
 REALPONTO ([0-9]\.|([1-9]+[0-9_]*[0-9]\.)*)([0-9]|([0-9]+[0-9_]*[0-9])*)?(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
