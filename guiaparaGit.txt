@@ -1,0 +1,12 @@
+na pagina projeto clicar em fork
+depois files
+vais à meta que queres
+clickar no + no file path
+escreves o nome do ficheiro, copias colas o conteudo, msg de commit
+commit
+depois vais a merge request, + new merge request
+metes o master igual
+compare branches
+descriçao
+assign to me
+submit merge request

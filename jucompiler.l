@@ -23,11 +23,11 @@
 
 ID                                      ([A-Za-z_$][0-9A-Za-z_$]*)
 RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System|"_")
-INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])*)
+INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 /*REALLIT                               (([0-9]*\.[0-9]+)|([0-9]+\.)|([1-9]\.)|//[1-9]+)*/
-REALPONTO ([0-9]\.|([1-9]+[0-9_]*[0-9]\.)*)([0-9]|([0-9]+[0-9_]*[0-9])*)?(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
-REALFRAC (\.[0-9]|\.([0-9]+[0-9_]*[0-9])*)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
-REALINTEIRO ([0-9]|([1-9]+[0-9_]*[0-9])*)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*))?
+REALPONTO ([0-9]\.|([1-9]+[0-9_]*[0-9]\.)+)([0-9]|([0-9]+[0-9_]*[0-9])+)?(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])+))?
+REALFRAC (\.[0-9]|\.([0-9]+[0-9_]*[0-9])+)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])+))?
+REALINTEIRO ([0-9]|([1-9]+[0-9_]*[0-9])+)(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])+))?
 EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 
 
@@ -42,13 +42,17 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 "\n"                                    {  ++total_lines; total_columns=1;};
 "\r"                                    {  ++total_lines; total_columns=1;};
 "//".*                                  {  total_columns += strlen(yytext);};
+
+
 "/*"                               {  error_line_number = total_lines; error_column_number = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
 <COMMENT>"\n"                              ++total_lines; total_columns=1;
 <COMMENT>[^["*/"]]*                        total_columns += strlen(yytext);
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
 <COMMENT><<EOF>>                        {  BEGIN 0;}
 <COMMENT>.                              {  total_columns += strlen(yytext);};
-"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLIT\n");};
+
+
+"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT\n");};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");};
 "="                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ASSIGN\n");};
 "*"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("STAR\n");};
@@ -92,6 +96,11 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 "void"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("VOID\n");};
 "while"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");};
 
+{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
+{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
+{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
+{REALPONTO}|{REALFRAC}|{REALINTEIRO}         {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
+
 \"                                      { error_column_number = total_columns;  ++total_columns; current_string[0] = '\0'; BEGIN STRING;};
 <STRING>\\(\\|n|f|r|t|(\"))             {  total_columns+= strlen(yytext); strcat(current_string, yytext);};
 <STRING>\"                              {  ++total_columns; if (print_tokens==1) printf("STRLIT(\"%s\")\n", current_string); BEGIN 0;};
@@ -100,18 +109,17 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 <STRING>"\n"|"\r"|"\r\n"                {  printf("Line %d, column %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
 <STRING>.                               {  total_columns += strlen(yytext); strcat(current_string, yytext);};
 <STRING><<EOF>>                         {  printf("Line %d, column %d: unterminated string literal\n", total_lines, error_column_number); ++total_lines; BEGIN 0;};
+
+
 <ILLEGAL_ESC>\"                         {  BEGIN 0;};
 <ILLEGAL_ESC>\\"\t"+|\\" "+             {  printf("Line %d, column %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext);};
 <ILLEGAL_ESC>\\[^"\n"]|\\               {  printf("Line %d, column %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
 <ILLEGAL_ESC>"\n"                       {  printf("Line %d, column %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
 <ILLEGAL_ESC>.                             total_columns+=strlen(yytext);
 <ILLEGAL_ESC><<EOF>>                    {  printf("Line %d, column %d: unterminated string literal\n", total_lines, error_column_number); ++total_lines; BEGIN 0;};
-{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
-{EXPOENTE}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("EXPOENTE(%s)\n", yytext);};
-{REALPONTO}|{REALFRAC}|{REALINTEIRO}         {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
-{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
-{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
 .                                          printf("Line %d, column %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);
+
+
 %%
 int main(int argc, char **argv)
 {
