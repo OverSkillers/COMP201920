@@ -1,0 +1,8 @@
+# Lex files
+lex.yy.c
+
+# Build file
+jucompiler
+
+# Zip file
+jucompiler.zip

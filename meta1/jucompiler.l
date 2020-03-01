@@ -22,7 +22,7 @@
 %}
 
 ID                                      ([A-Za-z_$][0-9A-Za-z_$]*)
-RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System|"_")
+RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System)
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 /*REALLIT                               (([0-9]*\.[0-9]+)|([0-9]+\.)|([1-9]\.)|//[1-9]+)*/
 REALPONTO ([0-9]\.|([1-9]+[0-9_]*[0-9]\.)+)([0-9]|([0-9]+[0-9_]*[0-9])+)?(([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])+))?
@@ -52,7 +52,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 <COMMENT>.                              {  total_columns += strlen(yytext);};
 
 
-"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT\n");};
+"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext);};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");};
 "="                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ASSIGN\n");};
 "*"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("STAR\n");};
@@ -87,7 +87,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 "else"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("ELSE\n");};
 "if"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("IF\n");};
 "int"                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INT\n");};
-"System.out.print"                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("PRINT\n");};
+"System.out.print"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PRINT\n");};
 "Integer.parseInt"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PARSEINT\n");};
 "public"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("PUBLIC\n");};
 "return"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("RETURN\n");};
@@ -99,7 +99,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 {RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
 {ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
-{REALPONTO}|{REALFRAC}|{REALINTEIRO}         {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
+{REALPONTO}|{REALFRAC}|{REALINTEIRO}    {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
 
 \"                                      { error_column_number = total_columns;  ++total_columns; current_string[0] = '\0'; BEGIN STRING;};
 <STRING>\\(\\|n|f|r|t|(\"))             {  total_columns+= strlen(yytext); strcat(current_string, yytext);};
