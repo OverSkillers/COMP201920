@@ -6,3 +6,10 @@ jucompiler
 
 # Zip file
 jucompiler.zip
+
+# Ignore input and output test case files
+*.juc
+*.java
+*.out
+!Factorial.java
+!Factorial.out
