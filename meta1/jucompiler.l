@@ -38,9 +38,10 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([1-9]+[0-9_]*[0-9])*)
 %%
 
 " "                                     {  total_columns += strlen(yytext);};
-"\t"                                    {  total_columns += strlen(yytext); };
-"\n"                                    {  ++total_lines; total_columns=1;};
-"\r"                                    {  ++total_lines; total_columns=1;};
+"\t"                                    {  total_columns += strlen(yytext);};
+"\n"                                    {  ++total_lines; total_columns=1; };
+"\\r"                                    {  total_columns += strlen(yytext);};
+"\r\n"                                  {  ++total_lines; total_columns=1; }
 "//".*                                  {  total_columns += strlen(yytext);};
 
 

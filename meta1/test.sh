@@ -30,10 +30,10 @@ echo ""
 for filename in ./test/input/*.{juc,java}; do
     FILE=${filename##*/}
 
-    padlimit=30
+    padlimit=50
     pad=$(printf '%*s' "$padlimit")
     pad=${pad// /-}
-    padlength=40
+    padlength=50
 
     # Run jucompiler with this test case
     ./jucompiler -l < $filename > output.txt
