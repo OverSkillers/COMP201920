@@ -19,6 +19,8 @@ PASSSTR="${GREEN}PASS"
 FAILSTR="${RED}FAIL"
 SKIPSTR="${BLUE}SKIP"
 
+shopt -s nullglob
+
 echo ""
 echo "Starting test..."
 echo ""
@@ -65,6 +67,8 @@ echo ""
 echo "PASSED: $PASSED"
 echo "FAILED: $FAILED"
 echo "SKIPPED: $SKIPPED"
+
+shopt -u nullglob
 
 # Clean up
 rm output.txt
