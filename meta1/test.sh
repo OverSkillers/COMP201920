@@ -36,7 +36,11 @@ for filename in ./test/input/*.{juc,java}; do
     padlength=50
 
     # Run jucompiler with this test case
-    ./jucompiler -l < $filename > output.txt
+    if [ $FILE == "errors.java" ] || [ $FILE == "InsertionSort.java" ]; then
+        ./jucompiler -e1 < $filename > output.txt
+    else
+        ./jucompiler -l < $filename > output.txt
+    fi
 
     # Check if an .out file doesn't exist for this test
     if ! [ -f ./test/output/${FILE%.*}.out ]; then
