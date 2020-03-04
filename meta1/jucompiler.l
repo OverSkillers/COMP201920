@@ -115,7 +115,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])*)
 \"                                      { error_column_number = total_columns;  ++total_columns; current_string[0] = '\0'; BEGIN STRING;};
 <STRING>\\(\\|n|f|r|t|(\"))             {  total_columns+= strlen(yytext); strcat(current_string, yytext);};
 <STRING>\"                              {  ++total_columns; if (print_tokens==1) printf("STRLIT(\"%s\")\n", current_string); BEGIN 0;};
-<STRING>\\"\t"+|\\" "+                  {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext); BEGIN ILLEGAL_ESC;};
+<STRING>\\\\t+|\\" "+                  {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext); BEGIN ILLEGAL_ESC;};
 <STRING>\\[^"\n"]|\\                    {  printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext); BEGIN ILLEGAL_ESC;};
 <STRING>"\n"|"\r"|"\r\n"                {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
 <STRING>.                               {  total_columns += strlen(yytext); strcat(current_string, yytext);};
@@ -123,7 +123,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])*)
 
 
 <ILLEGAL_ESC>\"                         {  BEGIN 0;};
-<ILLEGAL_ESC>\\"\t"+|\\" "+             {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext);};
+<ILLEGAL_ESC>\\\\t+|\\" "+             {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext);};
 <ILLEGAL_ESC>\\[^"\n"]|\\               {  printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
 <ILLEGAL_ESC>"\n"                       {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
 <ILLEGAL_ESC>.                             total_columns+=strlen(yytext);
