@@ -27,9 +27,10 @@ INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 /*REALLIT                               (([0-9]*\.[0-9]+)|([0-9]+\.)|([1-9]\.)|//[1-9]+)*/
 REALPONTO ([0-9]\.|([0-9]+[0-9_]*[0-9]\.)+)([0-9]|([0-9]+[0-9_]*[0-9])+)?(([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+))?
 REALFRAC (\.[0-9]|\.([0-9]+[0-9_]*[0-9])+)(([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+))?
-REALINTEIRO ([0-9]|([1-9]+[0-9_]*[0-9])+)(([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+))?
-EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])*)
+REALINTEIRO ([0-9]|([0-9]+[0-9_]*[0-9])+)(([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+))?
 
+EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
+NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
 
 %X COMMENT
 %X COMMENT2
@@ -110,7 +111,7 @@ EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])*)
 {RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
 {ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
-{REALPONTO}|{REALFRAC}|{REALINTEIRO}    {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
+({NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE})  {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
 
 \"                                      { error_column_number = total_columns;  ++total_columns; current_string[0] = '\0'; BEGIN STRING;};
 <STRING>\\(\\|n|f|r|t|(\"))             {  total_columns+= strlen(yytext); strcat(current_string, yytext);};
