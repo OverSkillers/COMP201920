@@ -7,6 +7,9 @@
     int total_lines = 1;
     int total_columns = 1;
 
+    int empty = 1;
+    int erro_string = 0;
+
     //Save first line and column where a possible error might occur
     int error_line_number;
     int error_column_number;
@@ -20,8 +23,8 @@
     //Hold current package ID
     char current_package_id[MAX_STR];
 %}
-
-ID                                      ([A-Za-z_$][0-9A-Za-z_$]*)
+ENTER \n|\r|\r\n
+ID                                      [A-Za-z_$][0-9A-Za-z_$]*
 RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System)
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
@@ -34,27 +37,31 @@ NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
 
 %%
 
-" "                                     {  total_columns += strlen(yytext);};
-[\t]+                                   {  total_columns += strlen(yytext);};
-[\n\r]                                  {  ++total_lines; total_columns=1; };
-"\r\n"                                  {  ++total_lines; total_columns=1; };
-"\f"                                    {  total_columns += strlen(yytext);};
-
+[ \t]+                                   {  total_columns += strlen(yytext);};
+{ENTER}                                  {  ++total_lines; total_columns=1; };
 
 "/*"                               {  error_line_number = total_lines; error_column_number = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
-<COMMENT>[\n\r]                            ++total_lines; total_columns=1;
-<COMMENT>"\r\n"                            ++total_lines; total_columns=1;
+<COMMENT>{ENTER}                           ++total_lines; total_columns=1;
 <COMMENT>[^["*/"]]*                        total_columns += strlen(yytext);
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
 <COMMENT><<EOF>>                        {  BEGIN 0;}
 <COMMENT>.                              {  total_columns += strlen(yytext);};
 
-"//"                                    {total_columns+= 2;BEGIN COMMENT2;};
-<COMMENT2>[\n\r]                        {  ++total_lines; total_columns=1;BEGIN 0;}
-<COMMENT2>"\r\n"                        {  ++total_lines; total_columns=1;BEGIN 0;}
+"//"                                    {  BEGIN COMMENT2;};
+<COMMENT2>{ENTER}                       {  ++total_lines; total_columns=1;BEGIN 0;}
 <COMMENT2>.                             {  total_columns += strlen(yytext);};
 
-
+\"								{error_column_number = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;empty=1;BEGIN STRING;}
+<STRING>([^\"\n\r\\]|\\\\|\\[fnrt\\\"])+			{strcat(current_string, yytext);empty = 0;total_columns += strlen(yytext);}
+<STRING>\\[^fnrt\n\r\\\"]			{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);}
+<STRING>\\							{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);}
+<STRING>\n|\r|\r\n			{BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number);total_columns=1;++total_lines;erro_string=1;}
+<STRING><<EOF>>			{BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number);total_columns=1;++total_lines;erro_string=1;}
+<STRING>\"				{BEGIN 0;++total_columns;if(erro_string==0)
+{if (print_tokens==1){
+if(empty == 1){printf("STRLIT(\"\")\n");}
+else printf("STRLIT(\"%s\")\n", current_string);}
+}}
 
 "true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext);};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");};
@@ -105,23 +112,8 @@ NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
 ({NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE})  {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
 
-\"                                      { error_column_number = total_columns;  ++total_columns; current_string[0] = '\0'; BEGIN STRING;};
-<STRING>\\(\\|n|f|r|t|(\"))             {  total_columns+= strlen(yytext); strcat(current_string, yytext);};
-<STRING>\"                              {  ++total_columns; if (print_tokens==1) printf("STRLIT(\"%s\")\n", current_string); BEGIN 0;};
-<STRING>\\\\t+|\\\\f+|\\" "+                  {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext); BEGIN ILLEGAL_ESC;};
-<STRING>\\[^"\n"]|\\                    {  printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext); BEGIN ILLEGAL_ESC;};
-<STRING>"\n"|"\r"|"\r\n"|"\n\r"         {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
-<STRING>.                               {  total_columns += strlen(yytext); strcat(current_string, yytext);};
-<STRING><<EOF>>                         {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); ++total_lines; BEGIN 0;};
-
-
-<ILLEGAL_ESC>\"                         {  BEGIN 0;};
-<ILLEGAL_ESC>\\\\t+|\\\\f+|\\" "+             {  printf("Line %d, col %d: invalid escape sequence (%c)\n", total_lines, total_columns, yytext[0]); total_columns += strlen(yytext);};
-<ILLEGAL_ESC>\\[^"\n"]|\\               {  printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
-<ILLEGAL_ESC>"\n"|"\r"|"\r\n"|"\n\r"     {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); total_columns=1; ++total_lines; BEGIN 0;};
-<ILLEGAL_ESC>.                             total_columns+=strlen(yytext);
-<ILLEGAL_ESC><<EOF>>                    {  printf("Line %d, col %d: unterminated string literal\n", total_lines, error_column_number); ++total_lines; BEGIN 0;};
-.                                          printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);
+[^" "\n\t\f\r]							{printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);}
+.										{total_columns += strlen(yytext);}
 
 
 %%
@@ -135,7 +127,7 @@ int main(int argc, char **argv)
 
     yylex();
 
-    if (comment == 1){
+    if(comment == 1){
         printf("Line %d, col %d: unterminated comment\n", error_line_number, error_column_number);
     }
 
