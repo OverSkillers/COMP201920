@@ -15,7 +15,7 @@
     int error_column_number;
 
     // /*...*/ like comments. to detect if analysis ended and it wasnt closed
-    int comment = 0;
+    int comment =  0;
 
     //Hold current strlit
     char current_string[MAX_STR];
@@ -25,7 +25,7 @@
 %}
 ENTER \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
-RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|var|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System)
+RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System)
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 EXPOENTE ([e|E])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
 NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
