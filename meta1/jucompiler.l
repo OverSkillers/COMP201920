@@ -34,13 +34,12 @@ NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
 %X COMMENT
 %X COMMENT2
 %X STRING
-%X ILLEGAL_ESC
 
 %%
 
-[ \t]+                                   {  total_columns += strlen(yytext);};
+[ \t]+                                   total_columns += strlen(yytext);
+[\f]+                                    total_columns += strlen(yytext);
 {ENTER}                                  {  ++total_lines; total_columns=1; };
-"//\n"					 {  ++total_lines; total_columns=1; };
 
 "/*"                               {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
 <COMMENT>{ENTER}                           ++total_lines; total_columns=1;
@@ -109,8 +108,7 @@ NUM ([0-9]+|([0-9]+[0-9_]*[0-9])+)
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
 ({NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE})  {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
 
-[^" "\n\t\f\r]							{printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
-.										{total_columns += strlen(yytext);};
+.										{printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
 
 
 %%
