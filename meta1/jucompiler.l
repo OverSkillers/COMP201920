@@ -56,8 +56,7 @@ NUM [0-9]+|([0-9]+[0-9_]*[0-9])+
 
 \"								{error_line_column_String = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;BEGIN STRING;}
 <STRING>([^\"\n\r\\]|\\\\|\\[fnrt\\\"])+		{strcat(current_string, yytext);total_columns += strlen(yytext);};
-<STRING>\\[^fnrt\n\r\\\"]			{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
-<STRING>\\							{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
+<STRING>(\\[^fnrt\n\r\\\"]|\\)			{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
 <STRING>{ENTER}			{BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);total_columns=1;++total_lines;erro_string=1;};
 <STRING>\"				{BEGIN 0;++total_columns;if(erro_string==0)
 {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}}};
