@@ -33,6 +33,7 @@ RESERVED                                (abstract|continue|for|new|switch|assert
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
 EXPOENTE ([eE])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
 NUM [0-9]+|([0-9]+[0-9_]*[0-9])+
+REALLIT {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
 
 %X COMMENT
 %X COMMENT2
@@ -85,13 +86,13 @@ NUM [0-9]+|([0-9]+[0-9_]*[0-9])+
 ")"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RPAR\n");};
 "]"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSQ\n");};
 ";"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("SEMICOLON\n");};
-"->"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ARROW\n");};
-"<<"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSHIFT\n");};
-">>"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSHIFT\n");};
+"->"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ARROW\n");};
+"<<"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSHIFT\n");};
+">>"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSHIFT\n");};
 "^"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("XOR\n");};
 "boolean"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOL\n");};
 "class"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("CLASS\n");};
-".length"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOTLENGTH\n");};
+".length"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOTLENGTH\n");};
 "double"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOUBLE\n");};
 "else"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("ELSE\n");};
 "if"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("IF\n");};
@@ -103,14 +104,14 @@ NUM [0-9]+|([0-9]+[0-9_]*[0-9])+
 "static"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STATIC\n");};
 "String"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STRING\n");};
 "void"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("VOID\n");};
-"while"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");};
+"while"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");};
 
 {RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
 {ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
-({NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE})  {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
+{REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
 
-.										{printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
+.                                       {printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
 
 
 %%
