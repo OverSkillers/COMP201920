@@ -27,13 +27,13 @@
     //Hold current package ID
     char current_package_id[MAX_STR];
 %}
-ENTER \n|\r|\r\n
+ENTER                                   \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
 RESERVED                                (abstract|continue|for|new|switch|assert|default|package|synchronized|do|goto|private|this|break|implements|protected|throw|byte|import|throws|case|enum|instanceof|transient|catch|extends|short|try|char|final|interface|finally|long|strictfp|volatile|const|float|native|super|"++"|"--"|null|Integer|System)
 INT                                     ([0-9]|([1-9]+[0-9_]*[0-9])+)
-EXPOENTE ([eE])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
-NUM [0-9]+|([0-9]+[0-9_]*[0-9])+
-REALLIT {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
+EXPOENTE                                ([eE])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-9])+)
+NUM                                     [0-9]+|([0-9]+[0-9_]*[0-9])+
+REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
 
 %X COMMENT
 %X COMMENT2
@@ -41,11 +41,11 @@ REALLIT {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
 
 %%
 
-[ \t]+                                   total_columns += strlen(yytext);
-[\f]+                                    total_columns += strlen(yytext);
-{ENTER}                                  {  ++total_lines; total_columns=1; };
+[ \t]+                                     total_columns += strlen(yytext);
+[\f]+                                      total_columns += strlen(yytext);
+{ENTER}                                 {  ++total_lines; total_columns=1; };
 
-"/*"                               {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
+"/*"                                    {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
 <COMMENT>{ENTER}                           ++total_lines; total_columns=1;
 <COMMENT>[^["*/"]]*                        total_columns += strlen(yytext);
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
@@ -55,12 +55,12 @@ REALLIT {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
 <COMMENT2>{ENTER}                       {  ++total_lines; total_columns=1;BEGIN 0;}
 <COMMENT2>.                             ;
 
-\"								{error_line_column_String = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;BEGIN STRING;}
-<STRING>([^\"\n\r\\]|\\\\|\\[fnrt\\\"])+		{strcat(current_string, yytext);total_columns += strlen(yytext);};
-<STRING>(\\[^fnrt\n\r\\\"]|\\)			{printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
-<STRING>{ENTER}			{BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);total_columns=1;++total_lines;erro_string=1;};
-<STRING>\"				{BEGIN 0;++total_columns;if(erro_string==0)
-{if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}}};
+\"                                      {  error_line_column_String = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;BEGIN STRING;}
+<STRING>([^\"\n\r\\]|\\\\|\\[fnrt\\\"])+ {strcat(current_string, yytext);total_columns += strlen(yytext);};
+<STRING>(\\[^fnrt\n\r\\\"]|\\)          {printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
+<STRING>{ENTER}                         {BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);total_columns=1;++total_lines;erro_string=1;};
+<STRING>\"                              {BEGIN 0;++total_columns;if(erro_string==0)
+                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}}};
 
 "true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext);};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");};
