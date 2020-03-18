@@ -1,9 +1,17 @@
 /*João Mendes Nº2016230975      Gabriela Costa Nº2017254837*/
 %{
     #define MAX_STR 1024
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <string.h>
+    #include "y.tab.h"
+    #include "ast.h"
 
     //If argument -1 is received, set as 1
     int print_tokens;
+
+    //If argument -1 is received, set as 1
+    int arvore;
 
     //Line and column counter
     int total_lines = 1;
@@ -59,56 +67,56 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 <STRING>(\\[^fnrt\n\r\\\"]|\\)          {printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
 <STRING>{ENTER}                         {BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);total_columns=1;++total_lines;erro_string=1;};
 <STRING>\"                              {BEGIN 0;++total_columns;if(erro_string==0)
-                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}}};
+                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}if(arvore == 1) {yylval.s = strdup(yytext);return STRLIT;}}};
 
-"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext);};
-"&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");};
-"="                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ASSIGN\n");};
-"*"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("STAR\n");};
-","                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("COMMA\n");};
-"/"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("DIV\n");};
-"=="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("EQ\n");};
-">="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("GE\n");};
-">"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("GT\n");};
-"{"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LBRACE\n");};
-"<="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("LE\n");};
-"("                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LPAR\n");};
-"["                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSQ\n");};
-"<"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LT\n");};
-"-"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("MINUS\n");};
-"%"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("MOD\n");};
-"!="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("NE\n");};
-"!"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("NOT\n");};
-"||"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("OR\n");};
-"+"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("PLUS\n");};
-"}"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RBRACE\n");};
-")"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RPAR\n");};
-"]"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSQ\n");};
-";"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("SEMICOLON\n");};
-"->"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ARROW\n");};
-"<<"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSHIFT\n");};
-">>"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSHIFT\n");};
-"^"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("XOR\n");};
-"boolean"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOL\n");};
-"class"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("CLASS\n");};
-".length"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOTLENGTH\n");};
-"double"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOUBLE\n");};
-"else"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("ELSE\n");};
-"if"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("IF\n");};
-"int"                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INT\n");};
-"System.out.print"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PRINT\n");};
-"Integer.parseInt"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PARSEINT\n");};
-"public"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("PUBLIC\n");};
-"return"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("RETURN\n");};
-"static"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STATIC\n");};
-"String"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STRING\n");};
-"void"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("VOID\n");};
-"while"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");};
+"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext); if(arvore == 1) {yylval.s = strdup(yytext);;return BOOLLIT;}};
+"&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");if(arvore == 1) return AND;};
+"="                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ASSIGN\n");if(arvore == 1) return ASSIGN;};
+"*"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("STAR\n");if(arvore == 1) return STAR;};
+","                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("COMMA\n");if(arvore == 1) return COMMA;};
+"/"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("DIV\n");if(arvore == 1) return DIV;};
+"=="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("EQ\n");if(arvore == 1) return EQ;};
+">="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("GE\n");if(arvore == 1) return GE;};
+">"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("GT\n");if(arvore == 1) return GT;};
+"{"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LBRACE\n");if(arvore == 1) return LBRACE;};
+"<="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("LE\n");if(arvore == 1) return LE;};
+"("                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LPAR\n");if(arvore == 1) return LPAR;};
+"["                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSQ\n");if(arvore == 1) return LSQ;};
+"<"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("LT\n");if(arvore == 1) return LT;};
+"-"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("MINUS\n");if(arvore == 1) return MINUS;};
+"%"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("MOD\n");if(arvore == 1) return MOD;};
+"!="                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("NE\n");if(arvore == 1) return NE;};
+"!"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("NOT\n");if(arvore == 1) return NOT;};
+"||"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("OR\n");if(arvore == 1) return OR;};
+"+"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("PLUS\n");if(arvore == 1) return PLUS;};
+"}"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RBRACE\n");if(arvore == 1) return RBRACE;};
+")"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RPAR\n");if(arvore == 1) return RPAR;};
+"]"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSQ\n");if(arvore == 1) return RSQ;};
+";"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("SEMICOLON\n");if(arvore == 1) return SEMICOLON;};
+"->"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ARROW\n");if(arvore == 1) return ARROW;};
+"<<"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("LSHIFT\n");if(arvore == 1) return LSHIFT;};
+">>"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("RSHIFT\n");if(arvore == 1) return RSHIFT;};
+"^"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("XOR\n");if(arvore == 1) return XOR;};
+"boolean"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOL\n");if(arvore == 1) return BOOL;};
+"class"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("CLASS\n");if(arvore == 1) return CLASS;};
+".length"                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOTLENGTH\n");if(arvore == 1) return DOTLENGTH;};
+"double"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("DOUBLE\n");if(arvore == 1) return DOUBLE;};
+"else"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("ELSE\n");if(arvore == 1) return ELSE;};
+"if"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("IF\n");if(arvore == 1) return IF;};
+"int"                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INT\n");if(arvore == 1) return INT;};
+"System.out.print"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PRINT\n");if(arvore == 1) return PRINT;};
+"Integer.parseInt"                      {  total_columns += strlen(yytext); if (print_tokens==1) printf("PARSEINT\n");if(arvore == 1) return PARSEINT;};
+"public"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("PUBLIC\n");if(arvore == 1) return PUBLIC;};
+"return"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("RETURN\n");if(arvore == 1) return RETURN;};
+"static"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STATIC\n");if(arvore == 1) return STATIC;};
+"String"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STRING\n");if(arvore == 1) return STRING;};
+"void"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("VOID\n");if(arvore == 1) return VOID;};
+"while"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");if(arvore == 1) return WHILE;};
 
-{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);};
-{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);};
-{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);};
-{REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);};
+{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return RESERVED;}};
+{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return ID;}};
+{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return INTLIT;}};
+{REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return REALLIT;}};
 
 .                                       {printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
 
@@ -117,10 +125,25 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 int main(int argc, char **argv)
 {
     if (argc > 1){
-        if (strcmp(argv[1], "-l")==0) print_tokens = 1;
-        if (strcmp(argv[1], "-e1")==0) print_tokens = 0;
+        if (strcmp(argv[1], "-l")==0){
+            print_tokens = 1;
+            arvore = 0;}
+        if (strcmp(argv[1], "-e1")==0){
+            print_tokens = 0;
+            arvore = 0;
+            yylex();}
+        if (strcmp(argv[1], "-t")==0){
+            print_tokens = 0;
+            arvore = 1;
+            yyparse();}
+        if (strcmp(argv[1], "-e2")==0){
+            print_tokens = 0;
+            arvore = 1;
+            yyparse();}
     }
-    else print_tokens = 0;
+    else{
+        print_tokens = 0;
+        }
 
     yylex();
 
