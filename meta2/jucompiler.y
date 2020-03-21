@@ -61,16 +61,17 @@ void yyerror (char *s);
 
 %type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDecl VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
 
-%left COMMA
-%right ASSIGN
-%left DIV MOD
+%right NOT
+%left DIV MOD STAR
 %left PLUS MINUS
 %left RSHIFT LSHIFT
 %left GE GT LT LE
 %left EQ NE
+%left XOR
 %left AND
 %left OR
-%right NOT
+%right ASSIGN
+
 
 %union{
 	char* s;
@@ -264,11 +265,11 @@ Expr: Expr PLUS Expr {}
 
      |Expr NE Expr {}
 
-     |MINUS Expr {}
+     |MINUS Expr {} %prec NOT
 
-     |NOT Expr {}
+     |NOT Expr {} %prec NOT
 
-     |PLUS Expr {}
+     |PLUS Expr {} %prec NOT
 
      |LPAR Expr RPAR {}
 
