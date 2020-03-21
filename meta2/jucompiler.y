@@ -1,4 +1,8 @@
 %{
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #define MAX_STR 1024
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,6 +15,12 @@ error_line_number_Comment,error_line_column_Comment;
 extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
+
+//For debug purposes
+#if (DEBUG > 0)
+int yydebug=1;
+#endif
+
 
 
 %}
@@ -179,9 +189,7 @@ Statement: LBRACE RBRACE {}
 
          | LBRACE StatementRep RBRACE {}
 
-         | IF LPAR Expr RPAR Statement {}
-
-         | IF LPAR Expr RPAR Statement ELSE Statement {}
+         | IF LPAR Expr RPAR Statement ElseStatement {}
 
          | WHILE LPAR Expr RPAR Statement {}
 
@@ -204,6 +212,12 @@ Statement: LBRACE RBRACE {}
          | error SEMICOLON {$$ = NULL;}
 
          ;
+
+ElseStatement: ELSE Statement {}
+
+        | Statement {}
+
+        ;
 
 StatementRep: Statement {}
 
