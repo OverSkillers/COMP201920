@@ -109,7 +109,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 "public"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("PUBLIC\n");if(arvore == 1) return PUBLIC;};
 "return"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("RETURN\n");if(arvore == 1) return RETURN;};
 "static"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STATIC\n");if(arvore == 1) return STATIC;};
-"String"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STRING\n");if(arvore == 1) return STRING;};
+"String"                                {  total_columns += strlen(yytext); if (print_tokens==1) printf("STRING\n");if(arvore == 1) return STR;};
 "void"                                  {  total_columns += strlen(yytext); if (print_tokens==1) printf("VOID\n");if(arvore == 1) return VOID;};
 "while"                                 {  total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");if(arvore == 1) return WHILE;};
 
