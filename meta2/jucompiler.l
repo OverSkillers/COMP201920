@@ -42,6 +42,7 @@ EXPOENTE                                ([eE])("+"|"-")?([0-9]|([0-9]+[0-9_]*[0-
 NUM                                     [0-9]+|([0-9]+[0-9_]*[0-9])+
 REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXPOENTE}?)|({NUM}{EXPOENTE}
 
+%option yylineno
 %X COMMENT
 %X COMMENT2
 %X STRING
