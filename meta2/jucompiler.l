@@ -127,29 +127,35 @@ int main(int argc, char **argv)
     if (argc > 1){
         if (strcmp(argv[1], "-l")==0){
             print_tokens = 1;
-            arvore = 0;}
+            arvore = 0;
+            yylex();
+
+            if(comment == 1){
+                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
+            }
+        }
         if (strcmp(argv[1], "-e1")==0){
             print_tokens = 0;
             arvore = 0;
-            yylex();}
+            yylex();
+
+            if(comment == 1){
+                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
+            }
+        }
         if (strcmp(argv[1], "-t")==0){
             print_tokens = 0;
             arvore = 1;
             yyparse();}
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
-            arvore = 1;
+            arvore = 0;
             yyparse();}
     }
     else{
         print_tokens = 0;
         }
 
-    yylex();
-
-    if(comment == 1){
-        printf("Line %d, col %d: unterminated comment\n", error_line_number_Comment, error_line_column_Comment);
-    }
 
     return 0;
 }
@@ -157,4 +163,8 @@ int main(int argc, char **argv)
 int yywrap()
 {
     return 1;
+}
+
+void yyerror (char *s){
+    printf("Line %d, col %d: %s: %s\n", yylineno, total_columns - yyleng, s, yytext);
 }
