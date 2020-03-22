@@ -63,7 +63,7 @@ int yydebug=1;
 %token PUBLIC
 %token RETURN
 %token STATIC
-%token STRING
+%token STR
 %token VOID
 %token WHILE
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
@@ -151,7 +151,7 @@ FormalParams: Type ID {}
 
             | Type ID FormalParamsRep {}
 
-            | STRING LSQ RSQ ID {}
+            | STR LSQ RSQ ID {}
 
             ;
 
