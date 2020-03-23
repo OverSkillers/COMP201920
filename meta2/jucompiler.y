@@ -119,13 +119,13 @@ FieldDecl: PUBLIC STATIC Type ID SEMICOLON {}
 
         | PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
 
+        | error SEMICOLON {$$ = NULL;}
+
         ;
 
 FieldDeclRep: COMMA ID {}
 
             |COMMA ID FieldDeclRep {}
-
-            |error SEMICOLON {$$ = NULL;}
 
             ;
 
@@ -167,9 +167,13 @@ MethodBody: LBRACE RBRACE {}
 
             ;
 
-MethodBodyRep: Statement VarDecl {}
+MethodBodyRep: Statement  {}
 
-            | Statement VarDecl MethodBodyRep {}
+            | Statement MethodBodyRep {}
+
+            | VarDecl MethodBodyRep {}
+
+            | VarDecl {}
 
             ;
 
@@ -189,7 +193,7 @@ Statement: LBRACE RBRACE {}
 
          | LBRACE StatementRep RBRACE {}
 
-         | IF LPAR Expr RPAR Statement ElseStatement {}
+         | IF LPAR Expr RPAR Statement ELSE Statement {}
 
          | WHILE LPAR Expr RPAR Statement {}
 
@@ -213,11 +217,6 @@ Statement: LBRACE RBRACE {}
 
          ;
 
-ElseStatement: ELSE Statement {}
-
-        | Statement {}
-
-        ;
 
 StatementRep: Statement {}
 
@@ -229,11 +228,13 @@ MethodInvocation: ID LPAR RPAR {}
 
         | ID LPAR Expr MethodInvocationRep RPAR {}
 
+        |ID LPAR error RPAR {$$ = NULL;}
+
         ;
 
 MethodInvocationRep: COMMA Expr MethodInvocationRep {}
 
-                    |ID LPAR error RPAR {$$ = NULL;}
+        | COMMA Expr {}
 
         ;
 
