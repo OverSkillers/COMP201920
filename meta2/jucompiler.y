@@ -72,17 +72,20 @@ int yydebug=1;
 
 %type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDecl VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
 
-%left LPAR RPAR LSQ RSQ
-%right NOT
-%left DIV MOD STAR
-%left PLUS MINUS
-%left RSHIFT LSHIFT
-%left GE GT LT LE
-%left EQ NE
-%left XOR
-%left AND
-%left OR
 %right ASSIGN
+%left OR
+%left AND
+%left XOR
+%left EQ NE
+%left GE GT LT LE
+%left RSHIFT LSHIFT
+%left PLUS MINUS
+%left DIV MOD STAR
+%right NOT
+%left LPAR RPAR LSQ RSQ
+
+%nonassoc IF
+%nonassoc ELSE
 
 
 %union{
@@ -194,6 +197,8 @@ VarDeclRep: COMMA ID {}
 Statement: LBRACE RBRACE {}
 
          | LBRACE StatementRep RBRACE {}
+
+         | IF LPAR Expr RPAR Statement {}
 
          | IF LPAR Expr RPAR Statement ELSE Statement {}
 
@@ -315,8 +320,8 @@ void yyerror (char *s){
 	// Como STRLIT é um estado do lex o yytext apenas contem a aspa de fechar a string, por isso tem de se usar yylval em vez de yytext
 	if (yychar == STRLIT){
 		printf("Line %d, col %d: %s: \"%s\"\n", total_lines, (int) (total_columns-strlen(yylval.s)) - 2, s, yylval.s);
-	} else if (((yytext[strlen(yytext) - 1] == '\n') && (yytext[strlen(yytext) - 1] == '\r'))|| yychar == 0){
-		printf("Line %d, col %d: %s: %s\n", total_lines, coluna , s, yytext);
+	} else if ((yytext[strlen(yytext) - 1] == '\n') || (yytext[strlen(yytext) - 1] == '\r')|| yychar == 0){
+		printf("Line %d, col %d: %s: %s\n", total_lines, total_columns , s, yytext);
 	} else {
 		printf("Line %d, col %d: %s: %s\n", total_lines, total_columns-yyleng, s, yytext);
 	}

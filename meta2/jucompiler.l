@@ -73,7 +73,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 <STRING>(\\[^fnrt\n\r\\\"]|\\)          {if(erros_lex == 1){printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);}erro_string=1;total_columns += strlen(yytext);};
 <STRING>{ENTER}                         {BEGIN 0;if(erros_lex == 1){printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);};total_columns=1;++total_lines;erro_string=1;};
 <STRING>\"                              {BEGIN 0;++total_columns;if(erro_string==0)
-                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}if(arvore == 1) {yylval.s = current_string;return STRLIT;}}};
+                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}if(arvore == 1) {yylval.s = strdup(current_string);return STRLIT;}}};
 
 "true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext); if(arvore == 1) {yylval.s = strdup(yytext);return BOOLLIT;};};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");if(arvore == 1) return AND;};
@@ -154,13 +154,20 @@ int main(int argc, char **argv)
         if (strcmp(argv[1], "-t")==0){
             print_tokens = 0;
             arvore = 1;
-            erros_lex = 0;
-            yyparse();}
+            erros_lex = 1;
+            yyparse();
+        }
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
             arvore = 1;
-            erros_lex = 0;
-            yyparse();}
+            erros_lex = 1;
+            yyparse();
+            yylex();
+
+            if(comment == 1 && erros_lex == 1){
+                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
+            }
+        }
     }
     else{
         print_tokens = 0;
