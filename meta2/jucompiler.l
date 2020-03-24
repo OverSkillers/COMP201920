@@ -13,9 +13,14 @@
     //If argument -1 is received, set as 1
     int arvore;
 
+    //If argument -1 is received, set as 1
+    int erros_lex;
+
     //Line and column counter
     int total_lines = 1;
     int total_columns = 1;
+
+    int coluna = 1;
 
     int erro_string = 0;
 
@@ -51,9 +56,9 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 
 [ \t]+                                     total_columns += strlen(yytext);
 [\f]+                                      total_columns += strlen(yytext);
-{ENTER}                                 {  ++total_lines; total_columns=1; };
+{ENTER}                                 {  ++total_lines;coluna = total_columns;total_columns=1; };
 
-"/*"                                    {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
+"/*"                                    {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns;coluna = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
 <COMMENT>{ENTER}                           ++total_lines; total_columns=1;
 <COMMENT>[^["*/"]]*                        total_columns += strlen(yytext);
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
@@ -63,14 +68,14 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 <COMMENT2>{ENTER}                       {  ++total_lines; total_columns=1;BEGIN 0;}
 <COMMENT2>.                             ;
 
-\"                                      {  error_line_column_String = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;BEGIN STRING;}
+\"                                      {  error_line_column_String = total_columns;coluna = total_columns;  ++total_columns; current_string[0] = '\0';erro_string=0;BEGIN STRING;}
 <STRING>([^\"\n\r\\]|\\\\|\\[fnrt\\\"])+ {strcat(current_string, yytext);total_columns += strlen(yytext);};
-<STRING>(\\[^fnrt\n\r\\\"]|\\)          {printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);erro_string=1;total_columns += strlen(yytext);};
-<STRING>{ENTER}                         {BEGIN 0;printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);total_columns=1;++total_lines;erro_string=1;};
+<STRING>(\\[^fnrt\n\r\\\"]|\\)          {if(erros_lex == 1){printf("Line %d, col %d: invalid escape sequence (%s)\n", total_lines, total_columns, yytext);}erro_string=1;total_columns += strlen(yytext);};
+<STRING>{ENTER}                         {BEGIN 0;if(erros_lex == 1){printf("Line %d, col %d: unterminated string literal\n", total_lines, error_line_column_String);};total_columns=1;++total_lines;erro_string=1;};
 <STRING>\"                              {BEGIN 0;++total_columns;if(erro_string==0)
-                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}if(arvore == 1) {yylval.s = strdup(yytext);return STRLIT;}}};
+                                            {if (print_tokens==1){printf("STRLIT(\"%s\")\n", current_string);}if(arvore == 1) {yylval.s = current_string;return STRLIT;}}};
 
-"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext); if(arvore == 1) {yylval.s = strdup(yytext);;return BOOLLIT;}};
+"true"|"false"                          {  total_columns += strlen(yytext); if (print_tokens==1) printf("BOOLLIT(%s)\n",yytext); if(arvore == 1) {yylval.s = strdup(yytext);return BOOLLIT;};};
 "&&"                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("AND\n");if(arvore == 1) return AND;};
 "="                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("ASSIGN\n");if(arvore == 1) return ASSIGN;};
 "*"                                     {  total_columns += strlen(yytext); if (print_tokens==1) printf("STAR\n");if(arvore == 1) return STAR;};
@@ -119,7 +124,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 {INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return INTLIT;}};
 {REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);if(arvore == 1) {yylval.s = strdup(yytext);return REALLIT;}};
 
-.                                       {printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext); total_columns += strlen(yytext);};
+.                                       {if(erros_lex == 1){printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext);} total_columns += strlen(yytext);};
 
 
 %%
@@ -128,33 +133,44 @@ int main(int argc, char **argv)
     if (argc > 1){
         if (strcmp(argv[1], "-l")==0){
             print_tokens = 1;
+            erros_lex = 1;
             arvore = 0;
             yylex();
 
-            if(comment == 1){
+            if(comment == 1 && erros_lex == 1){
                 printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
             }
         }
         if (strcmp(argv[1], "-e1")==0){
             print_tokens = 0;
             arvore = 0;
+            erros_lex = 1;
             yylex();
 
-            if(comment == 1){
+            if(comment == 1 && erros_lex == 1){
                 printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
             }
         }
         if (strcmp(argv[1], "-t")==0){
             print_tokens = 0;
             arvore = 1;
+            erros_lex = 0;
             yyparse();}
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
-            arvore = 0;
+            arvore = 1;
+            erros_lex = 0;
             yyparse();}
     }
     else{
         print_tokens = 0;
+        arvore = 1;
+        erros_lex = 1;
+        yylex();
+        if(comment == 1 && erros_lex == 1){
+                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
+            }
+        yyparse();
         }
 
 
@@ -164,8 +180,4 @@ int main(int argc, char **argv)
 int yywrap()
 {
     return 1;
-}
-
-void yyerror (char *s){
-    printf("Line %d, col %d: %s: %s\n", yylineno, total_columns - yyleng, s, yytext);
 }

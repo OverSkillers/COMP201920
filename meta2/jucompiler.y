@@ -10,6 +10,7 @@
 #include "y.tab.h"
 #include "ast.h"
 
+extern int yylineno,coluna,yyleng;
 extern int total_lines,total_columns,error_line_number_String,error_line_column_String,
 error_line_number_Comment,error_line_column_Comment;
 extern char* yytext;
@@ -71,6 +72,7 @@ int yydebug=1;
 
 %type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDecl VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
 
+%left LPAR RPAR LSQ RSQ
 %right NOT
 %left DIV MOD STAR
 %left PLUS MINUS
@@ -308,3 +310,14 @@ Expr: Expr PLUS Expr {}
 
     ;
 %%
+
+void yyerror (char *s){
+	// Como STRLIT é um estado do lex o yytext apenas contem a aspa de fechar a string, por isso tem de se usar yylval em vez de yytext
+	if (yychar == STRLIT){
+		printf("Line %d, col %d: %s: \"%s\"\n", total_lines, (int) (total_columns-strlen(yylval.s)) - 2, s, yylval.s);
+	} else if (((yytext[strlen(yytext) - 1] == '\n') && (yytext[strlen(yytext) - 1] == '\r'))|| yychar == 0){
+		printf("Line %d, col %d: %s: %s\n", total_lines, coluna , s, yytext);
+	} else {
+		printf("Line %d, col %d: %s: %s\n", total_lines, total_columns-yyleng, s, yytext);
+	}
+}
