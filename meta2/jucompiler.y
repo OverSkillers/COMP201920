@@ -96,21 +96,15 @@ int yydebug=1;
 
 %%
 
-Program: CLASS ID LBRACE RBRACE { }
-
-        | CLASS ID LBRACE ProgramRep RBRACE { }
+Program: CLASS ID LBRACE ProgramRep RBRACE { }
 
         ;
 
-ProgramRep: MethodDecl {}
+ProgramRep: {}
 
         | MethodDecl ProgramRep {}
 
-        | FieldDecl {}
-
         | FieldDecl ProgramRep {}
-
-        | SEMICOLON {}
 
         | SEMICOLON ProgramRep {}
 
@@ -120,15 +114,13 @@ MethodDecl: PUBLIC STATIC MethodHeader MethodBody {}
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID SEMICOLON {}
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
 
-        | PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
-
-        | error SEMICOLON {$$ = NULL;}
+        | error SEMICOLON {$$ = NULL;/*printf("FieldDeclError\n");*/}
 
         ;
 
-FieldDeclRep: COMMA ID {}
+FieldDeclRep: {}
 
             |COMMA ID FieldDeclRep {}
 
@@ -152,51 +144,41 @@ MethodHeader: Type ID LPAR RPAR {}
 
             ;
 
-FormalParams: Type ID {}
-
-            | Type ID FormalParamsRep {}
+FormalParams: Type ID FormalParamsRep {}
 
             | STR LSQ RSQ ID {}
 
             ;
 
-FormalParamsRep: COMMA Type ID {}
+FormalParamsRep: {}
 
             | COMMA Type ID FormalParamsRep {}
 
             ;
 
-MethodBody: LBRACE RBRACE {}
-
-            |LBRACE MethodBodyRep RBRACE {}
+MethodBody: LBRACE MethodBodyRep RBRACE {}
 
             ;
 
-MethodBodyRep: Statement  {}
+MethodBodyRep: {}
 
             | Statement MethodBodyRep {}
 
             | VarDecl MethodBodyRep {}
 
-            | VarDecl {}
-
             ;
 
-VarDecl: Type ID SEMICOLON {}
-
-        |Type ID VarDeclRep SEMICOLON {}
+VarDecl: Type ID VarDeclRep SEMICOLON {}
 
         ;
 
-VarDeclRep: COMMA ID {}
+VarDeclRep: {}
 
             |COMMA ID VarDeclRep {}
 
             ;
 
-Statement: LBRACE RBRACE {}
-
-         | LBRACE StatementRep RBRACE {}
+Statement: LBRACE StatementRep RBRACE {}
 
          | IF LPAR Expr RPAR Statement {}
 
@@ -220,28 +202,28 @@ Statement: LBRACE RBRACE {}
 
          | PRINT LPAR STRLIT RPAR SEMICOLON {}
 
-         | error SEMICOLON {$$ = NULL;}
+         | error SEMICOLON {$$ = NULL;/*printf("StatementError\n");*/}
 
          ;
 
 
-StatementRep: Statement {}
+StatementRep:   {}
+
+         | Statement {}
 
         ;
 
 MethodInvocation: ID LPAR RPAR {}
 
-        | ID LPAR Expr RPAR {}
-
         | ID LPAR Expr MethodInvocationRep RPAR {}
 
-        |ID LPAR error RPAR {$$ = NULL;}
+        | ID LPAR error RPAR {$$ = NULL;/*printf("MethodInvocationError\n");*/}
 
         ;
 
-MethodInvocationRep: COMMA Expr MethodInvocationRep {}
+MethodInvocationRep: {}
 
-        | COMMA Expr {}
+        | COMMA Expr MethodInvocationRep {}
 
         ;
 
@@ -249,9 +231,9 @@ Assignment: ID ASSIGN Expr {}
 
         ;
 
-ParseArgs: PARSEINT LPAR ID LSQ Expr RSQ LPAR {}
+ParseArgs: PARSEINT LPAR ID LSQ Expr RSQ RPAR {}
 
-          |PARSEINT LPAR error RPAR {$$ = NULL;}
+          |PARSEINT LPAR error RPAR {$$ = NULL;/*printf("ParseArgsError\n");*/}
 
         ;
 
@@ -311,7 +293,7 @@ Expr: Expr PLUS Expr {}
 
      |BOOLLIT {}
 
-     |LPAR error RPAR {$$ = NULL;}
+     |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
 
     ;
 %%
@@ -320,7 +302,7 @@ void yyerror (char *s){
 	// Como STRLIT é um estado do lex o yytext apenas contem a aspa de fechar a string, por isso tem de se usar yylval em vez de yytext
 	if (yychar == STRLIT){
 		printf("Line %d, col %d: %s: \"%s\"\n", total_lines, (int) (total_columns-strlen(yylval.s)) - 2, s, yylval.s);
-	} else if ((yytext[strlen(yytext) - 1] == '\n') || (yytext[strlen(yytext) - 1] == '\r')|| yychar == 0){
+	} else if ((yytext[strlen(yytext) - 1] == '\n') || (yytext[strlen(yytext) - 1] == '\r') || (strcmp(yytext,"\r\n")==0) || yychar == 0){
 		printf("Line %d, col %d: %s: %s\n", total_lines, total_columns , s, yytext);
 	} else {
 		printf("Line %d, col %d: %s: %s\n", total_lines, total_columns-yyleng, s, yytext);
