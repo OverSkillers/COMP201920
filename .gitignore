@@ -1,6 +1,9 @@
 # Lex files
 lex.yy.c
 
+# Yacc files
+y.*
+
 # Build file
 jucompiler
 
