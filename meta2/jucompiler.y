@@ -74,6 +74,8 @@ int yydebug=1;
 %type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
 %type <vardec> VarDecl
 
+%type <t> Type
+
 %right ASSIGN
 %left OR
 %left AND

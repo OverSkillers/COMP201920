@@ -1,6 +1,6 @@
 # Start building commands
 LEX="lex jucompiler.l"
-YACC="yacc -d -v jucompiler.y"
+YACC="yacc -d jucompiler.y"
 CLANG="clang-3.9 -Wall -Wno-unused-function -o jucompiler lex.yy.c y.tab.c -lm"
 
 # Check for any arguments
@@ -22,7 +22,7 @@ if $LEX; then
         # Compile using clang, checking for build success
         if $CLANG; then
             # Zip the lex file if build successful
-            zip jucompiler.zip jucompiler.l jucompiler.y ast.c ast.h structures.h
+            zip jucompiler.zip jucompiler.l jucompiler.y
         else
             exit
         fi
