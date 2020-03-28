@@ -12,7 +12,18 @@ typedef struct n{
 /**
  * Enum defining the type of the expression, addition, subtraction, left shift, ...
  * */
-typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t_ge, t_ne, t_eq, t_lshift, t_rshift, t_xor, t_minus, t_plus, t_length} t_expr;
+typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t_ge, t_ne, t_eq, t_lshift, t_rshift, t_xor, t_minus, t_plus, t_length, t_boollit, t_reallit, t_intlit} t_expr;
+
+/**
+ * Enum defining the type of a variable
+ * */
+typedef enum {t_int, t_char, t_double, t_bool, t_void, t_stringarray} t_var;
+
+/**
+ * Enum defining the type of statement
+ */
+typedef enum {t_if, t_while, t_return, t_call, t_print, t_parseargs, t_assign, t_block} t_statement;
+
 
 
 /**
@@ -20,7 +31,7 @@ typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t
  * */
 typedef struct type_expression{
     t_expr type;
-    char* left, right;
+    char* left, *right;
 } expression;
 
 typedef struct type_expression_list{
@@ -82,24 +93,19 @@ typedef struct type_statement_return{
 
 typedef struct type_statement_while{
     expression* condition;
-    statement_list* body;
+    struct type_statement_list* body;
 } statement_while;
 
 
 typedef struct type_statement_if{
     expression* condition;
-    statement_list* if_branch;
-    statement_list* else_branch;
+    struct type_statement_list* if_branch;
+    struct type_statement_list* else_branch;
 } statement_if;
 
 
 
 
-
-/**
- * Enum defining the type of statement
- */
-typedef enum {t_if, t_while, t_return, t_call, t_print, t_parseargs, t_assign, t_block} t_statement;
 
 /**
  * Define a statement, can be of several different types of statement
@@ -178,7 +184,7 @@ typedef struct type_method_header{
  * Define a method body
 */
 typedef struct type_method_body{
-    vardecl_list* decls;
+    struct type_vardecl_list* decls;
     statement_list* statements;
 } method_body;
 
@@ -204,11 +210,6 @@ typedef struct type_method_decl_list{
 
 
 
-/**
- * Enum defining the type of a variable
- * */
-typedef enum {t_int, t_char, t_double, t_void, t_stringarray} t_var;
-
 
 /**
  * Define a field declaration, and its list
@@ -227,6 +228,29 @@ typedef struct type_field_decl_list{
 
 
 
+/**
+ * Define a boolean terminal
+ * */
+typedef struct type_bool_term{
+    int value;
+} BOOL_LIT;
+
+
+/**
+ * Define an integer terminal
+ * */
+typedef struct type_int_term{
+    int value;
+} INT_LIT;
+
+
+/**
+ * Define a double terminal
+ * */
+typedef struct type_double_term{
+    double value;
+} DOUBLE_LIT;
+
 
 
 /**
@@ -236,9 +260,9 @@ typedef struct type_field_decl_list{
 typedef struct type_vardecl{
     t_var var_type;
     union{
-        INT* int_dec;
-        BOOL* bool_dec;
-        DOUBLE* double_dec;
+        INT_LIT* int_dec;
+        BOOL_LIT* bool_dec;
+        DOUBLE_LIT* double_dec;
     } var_data;
 } vardecl;
 
@@ -265,33 +289,13 @@ typedef struct type_program{
 
 
 
-
-
-/**
- * Define a boolean terminal
- * */
-typedef struct type_bool_term{
-    char *id;
-    int value;
-} BOOL;
-
-
-/**
- * Define an integer terminal
- * */
-typedef struct type_int_term{
-    char *id;
-    int value;
-} INT;
-
-
-/**
- * Define a double terminal
- * */
-typedef struct type_double_term{
-    char *id;
-    double value;
-} DOUBLE;
+typedef struct type_lit_term{
+    t_var type;
+    union{
+        double double_value;
+        int int_value;
+    } data;
+} lit_term;
 
 
 #endif
