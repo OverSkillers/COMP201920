@@ -13,7 +13,7 @@
 
 extern int yylineno,coluna,yyleng;
 extern int total_lines,total_columns,error_line_number_String,error_line_column_String,
-error_line_number_Comment,error_line_column_Comment;
+error_line_number_Comment,error_line_column_Comment,linha;
 extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
@@ -73,6 +73,8 @@ int yydebug=1;
 
 %type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
 %type <vardec> VarDecl
+
+%type <t> Type
 
 %right ASSIGN
 %left OR
@@ -212,7 +214,7 @@ Statement: LBRACE StatementRep RBRACE {}
 
 StatementRep:   {}
 
-         | Statement {}
+         | Statement StatementRep {}
 
         ;
 
@@ -298,7 +300,7 @@ Expr: Expr PLUS Expr {}
 
      |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
 
-    ;
+     ;
 %%
 
 void yyerror (char *s){
