@@ -9,6 +9,7 @@
 #include <string.h>
 #include "y.tab.h"
 #include "ast.h"
+#include "structures.h"
 
 extern int yylineno,coluna,yyleng;
 extern int total_lines,total_columns,error_line_number_String,error_line_column_String,
@@ -70,7 +71,8 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDecl VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr
+%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
+%type <vardec> VarDecl
 
 %type <t> Type
 
@@ -93,6 +95,7 @@ int yydebug=1;
 %union{
 	char* s;
 	struct n* no;
+        struct type_vardec* vardec;
 	char* t;
 }
 

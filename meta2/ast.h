@@ -2,12 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
-typedef struct n{
-	char *name;
-	struct n* son;
-	struct n* next;
-} node;
+#include "structures.h"
 
 node* create_node(const char* name);
 void add_next(node* n, node* n2);
