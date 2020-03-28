@@ -3,10 +3,24 @@
 rm test/lex/failed/*.out
 rm test/yacc/failed/*.out
 
+BUILD="bash build.sh"
+
+# Check for any arguments
+while getopts "vo" OPTION; do
+    case $OPTION in
+    v)
+        BUILD=$BUILD" -v"
+        ;;
+    o)
+        BUILD=$BUILD" -o"
+    esac
+done
+
+
 # Build jucompiler if not already built
 if ! [ -f jucompiler ]; then
     echo "jucompiler not built yet, running build script..."
-    bash build.sh
+    $BUILD
 fi
 
 PASSED=0
