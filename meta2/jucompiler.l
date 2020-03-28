@@ -20,6 +20,7 @@
     int total_lines = 1;
     int total_columns = 1;
 
+    int linha = 1;
     int coluna = 1;
 
     int erro_string = 0;
@@ -56,7 +57,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 
 [ \t]+                                     total_columns += strlen(yytext);
 [\f]+                                      total_columns += strlen(yytext);
-{ENTER}                                 {  ++total_lines;coluna = total_columns;total_columns=1; };
+{ENTER}                                 {  linha = total_lines;++total_lines;coluna = total_columns;total_columns=1; };
 
 "/*"                                    {  error_line_number_Comment = total_lines; error_line_column_Comment = total_columns;coluna = total_columns; total_columns+= 2;comment = 1;BEGIN COMMENT;};
 <COMMENT>{ENTER}                           ++total_lines; total_columns=1;
@@ -64,7 +65,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
 <COMMENT>.                              {  total_columns += strlen(yytext);};
 
-"//"                                    {  BEGIN COMMENT2;};
+"//"                                    {  coluna = total_columns;BEGIN COMMENT2;};
 <COMMENT2>{ENTER}                       {  ++total_lines; total_columns=1;BEGIN 0;}
 <COMMENT2>.                             ;
 
