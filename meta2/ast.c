@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "structures.h"
 
 node* create_node(const char* name){
 	//printf("Creating node %s\n", name);
