@@ -18,6 +18,13 @@ extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
 
+extern program* ast_root;
+
+field_decl_list* d_field_decl_list = NULL;
+field_decl_ids* temp_field_decl_ids = NULL;
+method_decl_list* d_method_decl_list = NULL;
+expression_list* expr_list;
+
 //For debug purposes
 #if (DEBUG > 0)
 int yydebug=1;
@@ -71,8 +78,14 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs Expr Type
+%type <no> Program ProgramRep FieldDeclRep FormalParamsRep MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
 %type <vardec> VarDecl
+%type <expression> Expr
+%type <method_decl> MethodDecl
+%type <method_header> MethodHeader
+%type <method_body> MethodBody
+%type <method_params_list> FormalParams
+%type <field_decl> FieldDecl
 
 %type <t> Type
 
@@ -96,18 +109,24 @@ int yydebug=1;
 	char* s;
 	struct n* no;
         struct type_vardec* vardec;
-	char* t;
+        struct type_expression* expression;
+        struct type_method_decl* method_decl;
+        struct type_method_header* method_header;
+        struct type_method_body* method_body;
+        struct type_method_params_list* method_params_list;
+        struct type_field_decl* field_decl;
+	int t;
 }
 
 %%
 
-Program: CLASS ID LBRACE ProgramRep RBRACE { }
+Program: CLASS ID LBRACE ProgramRep RBRACE { ast_root = insert_program($2, d_field_decl_list, d_method_decl_list);}
 
         ;
 
 ProgramRep: {}
 
-        | MethodDecl ProgramRep {}
+        | MethodDecl ProgramRep {d_method_decl_list = insert_method_decl(d_method_decl_list, $1);}
 
         | FieldDecl ProgramRep {}
 
@@ -115,11 +134,15 @@ ProgramRep: {}
 
         ;
 
-MethodDecl: PUBLIC STATIC MethodHeader MethodBody {}
+MethodDecl: PUBLIC STATIC MethodHeader MethodBody {$$ = create_method_decl($3, $4);}
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {
+                                                                temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $4); 
+                                                                d_field_decl_list = insert_field_decl(d_field_decl_list, $3, temp_field_decl_ids);
+                                                                temp_field_decl_ids = NULL;
+                                                        }
 
         | error SEMICOLON {$$ = NULL;/*printf("FieldDeclError\n");*/}
 
@@ -127,25 +150,25 @@ FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
 
 FieldDeclRep: {}
 
-            |COMMA ID FieldDeclRep {}
+            |COMMA ID FieldDeclRep { temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $2); }
 
             ;
 
-Type: BOOL {}
+Type: BOOL {$$ = t_bool;}
 
-    |INT {}
+    |INT {$$ = t_int;}
 
-    |DOUBLE {}
+    |DOUBLE {$$ = t_double;}
 
     ;
 
-MethodHeader: Type ID LPAR RPAR {}
+MethodHeader: Type ID LPAR RPAR {$$ = create_method_header($1, $2, NULL);}
 
-            | Type ID LPAR FormalParams RPAR {}
+            | Type ID LPAR FormalParams RPAR {$$ = create_method_header($1, $2, $4);}
 
-            | VOID ID LPAR RPAR {}
+            | VOID ID LPAR RPAR {$$ = create_method_header(t_void, $2, NULL);}
 
-            | VOID ID LPAR FormalParams RPAR {}
+            | VOID ID LPAR FormalParams RPAR {$$ = create_method_header(t_void, $2, $4);}
 
             ;
 
@@ -292,11 +315,11 @@ Expr: Expr PLUS Expr {}
 
      |ID DOTLENGTH {}
 
-     |INTLIT {}
+     |INTLIT { $$ = insert_expression_node(t_intlit, strdup($1), NULL); }
 
-     |REALLIT {}
+     |REALLIT { $$ = insert_expression_node(t_reallit, strdup($1), NULL);}
 
-     |BOOLLIT {}
+     |BOOLLIT { $$ = insert_expression_node(t_boollit, strdup($1), NULL);}
 
      |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
 

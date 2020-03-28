@@ -214,11 +214,18 @@ typedef struct type_method_decl_list{
 /**
  * Define a field declaration, and its list
 */
+
+/*Need this structure to save multiple ids
+ for same field decl type*/
+typedef struct util_field_decl_ids{
+    char* id;
+    struct util_field_decl_ids* next;
+} field_decl_ids;
+
 typedef struct type_field_decl{
     t_var type;
-    char* id;
+    field_decl_ids* ids;
 } field_decl;
-
 
 typedef struct type_field_decl_list{
     field_decl* data;
