@@ -24,6 +24,11 @@ typedef enum {t_int, t_char, t_double, t_bool, t_void, t_stringarray} t_var;
  */
 typedef enum {t_if, t_while, t_return, t_call, t_print, t_parseargs, t_assign, t_block} t_statement;
 
+/**
+ * Enum defining the type of a method body node
+ */
+typedef enum {t_stmt, t_vardecl} t_node;
+
 
 
 /**
@@ -183,9 +188,18 @@ typedef struct type_method_header{
 /**
  * Define a method body
 */
+/*Need this, to preserve order of stmt and vardecl*/
+typedef struct util_method_body_nodes{
+    t_node type;
+    union{
+        struct type_vardecl_list* vars;
+        statement_list* stmts;
+    } data;
+    struct util_method_body_nodes* next;
+} method_body_nodes;
+
 typedef struct type_method_body{
-    struct type_vardecl_list* decls;
-    statement_list* statements;
+    method_body_nodes* nodes;
 } method_body;
 
 
@@ -224,7 +238,7 @@ typedef struct util_field_decl_ids{
 
 typedef struct type_field_decl{
     t_var type;
-    field_decl_ids* ids;
+    char* id;
 } field_decl;
 
 typedef struct type_field_decl_list{
@@ -265,13 +279,16 @@ typedef struct type_double_term{
  * 
  **/
 typedef struct type_vardecl{
-    t_var var_type;
-    union{
-        INT_LIT* int_dec;
-        BOOL_LIT* bool_dec;
-        DOUBLE_LIT* double_dec;
-    } var_data;
+    t_var type;
+    char* id;
 } vardecl;
+
+/*Need this structure to save multiple ids
+ for same var decl type*/
+typedef struct util_vardecl_ids{
+    char* id;
+    struct util_vardecl_ids* next;
+} vardecl_ids;
 
 
 typedef struct type_vardecl_list{

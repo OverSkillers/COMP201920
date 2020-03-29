@@ -25,6 +25,9 @@ field_decl_list* d_field_decl_list = NULL;
 field_decl_ids* temp_field_decl_ids = NULL;
 method_decl_list* d_method_decl_list = NULL;
 param_decl_list* temp_param_list = NULL;
+method_body_nodes* temp_method_body_nodes = NULL;
+vardecl_list* temp_vardecl_list = NULL;
+vardecl_ids* temp_vardecl_ids = NULL;
 expression_list* expr_list;
 
 //For debug purposes
@@ -80,14 +83,15 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-%type <no> Program ProgramRep FieldDeclRep MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
-%type <vardec> VarDecl
+%type <no> Program ProgramRep FieldDeclRep VarDeclRep StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
+%type <vardecl_list> VarDecl
 %type <expression> Expr
 %type <method_decl> MethodDecl
 %type <method_header> MethodHeader
 %type <method_body> MethodBody
 %type <param_decl_list> FormalParams FormalParamsRep
 %type <field_decl> FieldDecl
+%type <statement_list> Statement
 
 %type <t> Type
 
@@ -110,13 +114,15 @@ int yydebug=1;
 %union{
 	char* s;
 	struct n* no;
-        struct type_vardec* vardec;
+        struct type_vardecl_list* vardecl_list;
         struct type_expression* expression;
         struct type_method_decl* method_decl;
         struct type_method_header* method_header;
         struct type_method_body* method_body;
+        struct type_method_body_nodes* method_body_nodes;
         struct type_param_decl_list* param_decl_list;
         struct type_field_decl* field_decl;
+        struct type_statement_list* statement_list;
 	int t;
 }
 
@@ -186,25 +192,30 @@ FormalParamsRep: {}
 
             ;
 
-MethodBody: LBRACE MethodBodyRep RBRACE {}
+MethodBody: LBRACE MethodBodyRep RBRACE {$$ = create_method_body(temp_method_body_nodes); temp_method_body_nodes=NULL;}
 
             ;
 
 MethodBodyRep: {}
 
-            | Statement MethodBodyRep {}
+            | Statement MethodBodyRep {temp_method_body_nodes = insert_mbody_statement(temp_method_body_nodes, $1);}
 
-            | VarDecl MethodBodyRep {}
+            | VarDecl MethodBodyRep {temp_method_body_nodes = insert_mbody_vardecl(temp_method_body_nodes, $1);}
 
             ;
 
-VarDecl: Type ID VarDeclRep SEMICOLON {}
+VarDecl: Type ID VarDeclRep SEMICOLON {
+                                        temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);
+                                        $$ = temp_vardecl_list = insert_vardecl(temp_vardecl_list, $1, temp_vardecl_ids);
+                                        temp_vardecl_ids = NULL;
+                                        temp_vardecl_list = NULL;
+                                      }
 
         ;
 
 VarDeclRep: {}
 
-            |COMMA ID VarDeclRep {}
+            |COMMA ID VarDeclRep {temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);}
 
             ;
 

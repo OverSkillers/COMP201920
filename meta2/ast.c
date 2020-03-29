@@ -96,23 +96,34 @@ method_decl_list* insert_method_decl(method_decl_list* head, method_decl* decl){
 	return node;
 }
 
+field_decl* create_field_decl(t_var type, char* id){
+	field_decl* node_decl = malloc(sizeof(field_decl));
+
+	node_decl->id = id;
+	node_decl->type = type;
+
+	return node_decl;
+}
+
 field_decl_list* insert_field_decl(field_decl_list* head, t_var type, field_decl_ids* ids){
 	if (ids == NULL) return NULL;
 
-	field_decl_list* node = malloc(sizeof(field_decl_list));
-	field_decl_list* temp;
+	field_decl_ids* iterator = ids;
+	for (; iterator; iterator = iterator->next){
+		field_decl_list* node = malloc(sizeof(field_decl_list));
+		field_decl_list* temp;
 
-	field_decl* node_decl = malloc(sizeof(field_decl));
-	node_decl->ids = ids;
-	node_decl->type = type;
+		node->data = create_field_decl(type, iterator->id);
+		node->next = NULL;
 
-	node->data = node_decl;
-	node->next = NULL;
+		if (head == NULL){
+			head = node;
+			continue;
+		}
 
-	if (head == NULL) return node;
-
-	for (temp = head; temp->next; temp = temp->next);
-	temp->next = node;
+		for (temp = head; temp->next; temp = temp->next);
+		temp->next = node;
+	}
 
 	return head;
 }
@@ -175,6 +186,89 @@ param_decl* create_param_decl(t_var type, char* id){
 	return node;
 }
 
+method_body* create_method_body(method_body_nodes* nodes){
+	method_body* body = malloc(sizeof(method_body));
+
+	body->nodes = nodes;
+
+	return body;
+}
+
+method_body_nodes* insert_mbody_statement(method_body_nodes* head, statement_list* stmts){
+	method_body_nodes* node = malloc(sizeof(method_body_nodes));
+
+	node->data.stmts = stmts;
+	node->type = t_stmt;
+	node->next = NULL;
+
+	if (head == NULL) return node;
+
+	node->next = head;
+
+	return node;
+}
+
+method_body_nodes* insert_mbody_vardecl(method_body_nodes* head, vardecl_list* vars){
+	method_body_nodes* node = malloc(sizeof(method_body_nodes));
+
+	node->data.vars = vars;
+	node->type = t_vardecl;
+	node->next = NULL;
+
+	if (head == NULL) return node;
+
+	node->next = head;
+
+	return node;
+}
+
+
+vardecl_ids* insert_vardecl_id(vardecl_ids* head, char* id){
+	vardecl_ids* node = malloc(sizeof(vardecl_ids));
+
+	node->id = strdup(id);
+	node->next = NULL;
+
+	if (head == NULL) return node;
+
+	node->next = head;
+
+	return node;
+}
+
+vardecl* create_vardecl(t_var type, char* id){
+	vardecl* var = malloc(sizeof(vardecl));
+
+	var->id = id;
+	var->type = type;
+
+	return var;
+}
+
+//TODO: Free vardecl_ids
+vardecl_list* insert_vardecl(vardecl_list* head, t_var type, vardecl_ids* ids){
+	if (ids == NULL) return NULL;
+
+	vardecl_ids* iterator = ids;
+	for (; iterator; iterator = iterator->next){
+		vardecl_list* node = malloc(sizeof(vardecl_list));
+		vardecl_list* temp;
+
+		node->data = create_vardecl(type, iterator->id);
+		node->next = NULL;
+
+		if (head == NULL){
+			head = node;
+			continue;
+		}
+
+		for (temp = head; temp->next; temp = temp->next);
+		temp->next = node;
+	}
+
+	return head;
+}
+
 
 expression* insert_expression_node(t_expr type, char* left, char* right){
 	expression* expr = malloc(sizeof(expression));
@@ -195,9 +289,7 @@ void print_tree(program* root){
 		printf("FieldDecls\n");
 		for (field_decl_list* temp1 = root->field_decl_l; temp1; temp1 = temp1->next){
 			printf("Type(%d)\n", temp1->data->type);
-			for (field_decl_ids* temp = temp1->data->ids; temp; temp = temp->next){
-				printf("Id(%s)\n", temp->id);
-			}
+			printf("Id(%s)\n", temp1->data->id);
 		}
 	}
 
@@ -205,6 +297,7 @@ void print_tree(program* root){
 		printf("Methods\n");
 		method_decl_list* temp;
 		for (temp = root->method_decl_l; temp; temp = temp->next){
+			printf("Header\n");
 			printf("MethodType(%d)\n", temp->data->header->type);
 			printf("MethodId(%s)\n", temp->data->header->id);
 
@@ -214,6 +307,21 @@ void print_tree(program* root){
 				for (param_decl_list* temp1 = params; temp1; temp1 = temp1->next){
 					printf("Type(%d)\n", temp1->data->type);
 					printf("Id(%s)\n", temp1->data->id);
+				}
+			}
+
+			if (temp->data->body != NULL){
+				printf("Body\n");
+				method_body_nodes* nodes = temp->data->body->nodes;
+				for (method_body_nodes* temp1 = nodes; temp1; temp1 = temp1->next){
+					if (temp1->type == t_vardecl){
+						printf("VarDecl\n");
+						vardecl_list* decls = temp1->data.vars;
+						for (vardecl_list* temp2 = decls; temp2; temp2 = temp2->next){
+							printf("Type(%d)\n", temp2->data->type);
+							printf("Id(%s)\n", temp2->data->id);
+						}
+					}
 				}
 			}
 		}
