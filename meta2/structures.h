@@ -160,10 +160,10 @@ typedef struct type_param_decl_list{
 /**
  * Define a method parameter node, which has a list of parameter declarations
 */
-typedef struct type_method_params_list{
+/*typedef struct type_method_params_list{
     param_decl_list* param_decls;
     struct type_method_params_list* next;
-} method_params_list;
+} method_params_list;*/
 
 
 
@@ -174,7 +174,7 @@ typedef struct type_method_params_list{
 typedef struct type_method_header{
     t_var type;
     char* id;
-    method_params_list* params;
+    param_decl_list* params;
 } method_header;
 
 

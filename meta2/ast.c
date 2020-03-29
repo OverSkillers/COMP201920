@@ -141,7 +141,7 @@ method_decl* create_method_decl(method_header* header, method_body* body){
 	return node;
 }
 
-method_header* create_method_header(t_var type, char* id, method_params_list* params){
+method_header* create_method_header(t_var type, char* id, param_decl_list* params){
 	method_header* header = malloc(sizeof(method_header));
 
 	header->id = strdup(id);
@@ -150,6 +150,29 @@ method_header* create_method_header(t_var type, char* id, method_params_list* pa
 	if (params != NULL) header->params = params;
 
 	return header;
+}
+
+
+param_decl_list* insert_param_decl(param_decl_list* head, param_decl* param){
+	param_decl_list* node = malloc(sizeof(param_decl_list));
+
+	node->data = param;
+	node->next = NULL;
+
+	if (head == NULL) return node;
+
+	node->next = head;
+
+	return node;
+}
+
+param_decl* create_param_decl(t_var type, char* id){
+	param_decl* node = malloc(sizeof(param_decl));
+
+	node->type = type;
+	node->id = strdup(id);
+
+	return node;
 }
 
 
@@ -180,9 +203,19 @@ void print_tree(program* root){
 
 	if (root->method_decl_l != NULL){
 		printf("Methods\n");
-		for (method_decl_list* temp = root->method_decl_l; temp; temp = temp->next){
+		method_decl_list* temp;
+		for (temp = root->method_decl_l; temp; temp = temp->next){
 			printf("MethodType(%d)\n", temp->data->header->type);
 			printf("MethodId(%s)\n", temp->data->header->id);
+
+			if (temp->data->header->params != NULL){
+				printf("Params\n");
+				param_decl_list* params = temp->data->header->params;
+				for (param_decl_list* temp1 = params; temp1; temp1 = temp1->next){
+					printf("Type(%d)\n", temp1->data->type);
+					printf("Id(%s)\n", temp1->data->id);
+				}
+			}
 		}
 	}
 }

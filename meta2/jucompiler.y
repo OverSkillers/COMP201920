@@ -20,9 +20,11 @@ void yyerror (char *s);
 
 extern program* ast_root;
 
+//TODO: Free these helper lists whenever they are set to NULL
 field_decl_list* d_field_decl_list = NULL;
 field_decl_ids* temp_field_decl_ids = NULL;
 method_decl_list* d_method_decl_list = NULL;
+param_decl_list* temp_param_list = NULL;
 expression_list* expr_list;
 
 //For debug purposes
@@ -78,13 +80,13 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-%type <no> Program ProgramRep FieldDeclRep FormalParamsRep MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
+%type <no> Program ProgramRep FieldDeclRep MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
 %type <vardec> VarDecl
 %type <expression> Expr
 %type <method_decl> MethodDecl
 %type <method_header> MethodHeader
 %type <method_body> MethodBody
-%type <method_params_list> FormalParams
+%type <param_decl_list> FormalParams FormalParamsRep
 %type <field_decl> FieldDecl
 
 %type <t> Type
@@ -113,7 +115,7 @@ int yydebug=1;
         struct type_method_decl* method_decl;
         struct type_method_header* method_header;
         struct type_method_body* method_body;
-        struct type_method_params_list* method_params_list;
+        struct type_param_decl_list* param_decl_list;
         struct type_field_decl* field_decl;
 	int t;
 }
@@ -164,23 +166,23 @@ Type: BOOL {$$ = t_bool;}
 
 MethodHeader: Type ID LPAR RPAR {$$ = create_method_header($1, $2, NULL);}
 
-            | Type ID LPAR FormalParams RPAR {$$ = create_method_header($1, $2, $4);}
+            | Type ID LPAR FormalParams RPAR {$$ = create_method_header($1, $2, $4); temp_param_list = NULL;}
 
             | VOID ID LPAR RPAR {$$ = create_method_header(t_void, $2, NULL);}
 
-            | VOID ID LPAR FormalParams RPAR {$$ = create_method_header(t_void, $2, $4);}
+            | VOID ID LPAR FormalParams RPAR {$$ = create_method_header(t_void, $2, $4); temp_param_list = NULL;}
 
             ;
 
-FormalParams: Type ID FormalParamsRep {}
+FormalParams: Type ID FormalParamsRep {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl($1, $2));}
 
-            | STR LSQ RSQ ID {}
+            | STR LSQ RSQ ID {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl(t_stringarray, $4));}
 
             ;
 
 FormalParamsRep: {}
 
-            | COMMA Type ID FormalParamsRep {}
+            | COMMA Type ID FormalParamsRep {temp_param_list = insert_param_decl(temp_param_list, create_param_decl($2, $3));}
 
             ;
 

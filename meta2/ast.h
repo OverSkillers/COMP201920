@@ -18,7 +18,9 @@ method_decl_list* insert_method_decl(method_decl_list*, method_decl*);
 field_decl_list* insert_field_decl(field_decl_list*, t_var, field_decl_ids*);
 field_decl_ids* insert_field_decl_id(field_decl_ids*, char*);
 method_decl* create_method_decl(method_header*, method_body*);
-method_header* create_method_header(t_var, char*, method_params_list*);
+method_header* create_method_header(t_var, char*, param_decl_list*);
+param_decl_list* insert_param_decl(param_decl_list*, param_decl*);
+param_decl* create_param_decl(t_var, char*);
 expression* insert_expression_node(t_expr, char*, char*);
 
 void print_tree(program*);
