@@ -6,6 +6,7 @@
     #include <string.h>
     #include "y.tab.h"
     #include "ast.h"
+    #include "structures.h"
 
     //If argument -1 is received, set as 1
     int print_tokens;
@@ -39,6 +40,8 @@
 
     //Hold current package ID
     char current_package_id[MAX_STR];
+
+    program* ast_root;
 %}
 ENTER                                   \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
@@ -166,6 +169,8 @@ int main(int argc, char **argv)
         yylex();
         yyparse();
         }
+
+        if (arvore == 1) print_tree(ast_root);
 
 
     return 0;

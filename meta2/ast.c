@@ -269,6 +269,29 @@ vardecl_list* insert_vardecl(vardecl_list* head, t_var type, vardecl_ids* ids){
 	return head;
 }
 
+statement* create_if_statement(expression* condition, statement_list* if_branch, statement_list* else_branch){
+	statement* stmt = malloc(sizeof(statement));
+
+	stmt->type = t_if;
+	stmt->data.if_stmt->if_branch = if_branch;
+	stmt->data.if_stmt->else_branch = else_branch;
+
+	return stmt;
+}
+
+statement_list* insert_statement(statement_list* head, statement* stmt){
+	statement_list* node = malloc(sizeof(statement_list));
+
+	node->data = stmt;
+	node->next = NULL;
+
+	if (head == NULL) return node;
+
+	node->next = head;
+
+	return node;
+}
+
 
 expression* insert_expression_node(t_expr type, char* left, char* right){
 	expression* expr = malloc(sizeof(expression));

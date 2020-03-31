@@ -28,6 +28,8 @@ method_body_nodes* insert_mbody_vardecl(method_body_nodes*, vardecl_list*);
 vardecl* create_vardecl(t_var, char*);
 vardecl_ids* insert_vardecl_id(vardecl_ids*, char*);
 vardecl_list* insert_vardecl(vardecl_list*, t_var, vardecl_ids*);
+statement* create_if_statement(expression*, statement_list*, statement_list*);
+statement_list* insert_statement(statement_list*, statement*);
 expression* insert_expression_node(t_expr, char*, char*);
 
 void print_tree(program*);

@@ -7,7 +7,7 @@ CLANG="clang-3.9 -Wall -Wno-unused-function -o jucompiler lex.yy.c y.tab.c ast.c
 while getopts "vo" OPTION; do
     case $OPTION in
     v)
-        CLANG=$CLANG" -v -DDEBUG=1"
+        CLANG=$CLANG" -g -v -DDEBUG=1"
         LEX="lex -v jucompiler.l"
         YACC="yacc -d --debug --verbose jucompiler.y"
         ;;

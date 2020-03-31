@@ -12,7 +12,7 @@ typedef struct n{
 /**
  * Enum defining the type of the expression, addition, subtraction, left shift, ...
  * */
-typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t_ge, t_ne, t_eq, t_lshift, t_rshift, t_xor, t_minus, t_plus, t_length, t_boollit, t_reallit, t_intlit} t_expr;
+typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t_ge, t_ne, t_eq, t_lshift, t_rshift, t_xor, t_minus, t_plus, t_length, t_boollit, t_reallit, t_intlit, t_strlit} t_expr;
 
 /**
  * Enum defining the type of a variable
