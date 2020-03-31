@@ -6,7 +6,6 @@
     #include <string.h>
     #include "y.tab.h"
     #include "ast.h"
-    #include "structures.h"
 
     //If argument -1 is received, set as 1
     int print_tokens;
@@ -40,8 +39,6 @@
 
     //Hold current package ID
     char current_package_id[MAX_STR];
-
-    program* ast_root = NULL;
 %}
 ENTER                                   \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
@@ -67,6 +64,7 @@ REALLIT                                 {NUM}"."{NUM}?{EXPOENTE}?)|("."{NUM}{EXP
 <COMMENT>[^["*/"]]*                        total_columns += strlen(yytext);
 <COMMENT>"*/"                           {  total_columns += 2; comment = 0; BEGIN 0;};
 <COMMENT>.                              {  total_columns += strlen(yytext);};
+<COMMENT><<EOF>>                        {  if(erros_lex == 1) printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment); BEGIN 0;}
 
 "//"                                    {  coluna = total_columns;BEGIN COMMENT2;};
 <COMMENT2>{ENTER}                       {  ++total_lines; total_columns=1;BEGIN 0;}
@@ -140,20 +138,12 @@ int main(int argc, char **argv)
             erros_lex = 1;
             arvore = 0;
             yylex();
-
-            if(comment == 1 && erros_lex == 1){
-                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
-            }
         }
         if (strcmp(argv[1], "-e1")==0){
             print_tokens = 0;
             arvore = 0;
             erros_lex = 1;
             yylex();
-
-            if(comment == 1 && erros_lex == 1){
-                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
-            }
         }
         if (strcmp(argv[1], "-t")==0){
             print_tokens = 0;
@@ -167,10 +157,6 @@ int main(int argc, char **argv)
             erros_lex = 1;
             yyparse();
             yylex();
-
-            if(comment == 1 && erros_lex == 1){
-                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
-            }
         }
     }
     else{
@@ -178,15 +164,9 @@ int main(int argc, char **argv)
         arvore = 1;
         erros_lex = 1;
         yylex();
-        if(comment == 1 && erros_lex == 1){
-                printf("Line %d, col %d: unterminated comment\n",error_line_number_Comment, error_line_column_Comment);
-            }
         yyparse();
         }
 
-        if (arvore == 1){
-            if (ast_root != NULL) print_tree(ast_root);
-        }
 
     return 0;
 }

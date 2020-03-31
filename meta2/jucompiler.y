@@ -18,18 +18,6 @@ extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
 
-extern program* ast_root;
-
-//TODO: Free these helper lists whenever they are set to NULL
-field_decl_list* d_field_decl_list = NULL;
-field_decl_ids* temp_field_decl_ids = NULL;
-method_decl_list* d_method_decl_list = NULL;
-param_decl_list* temp_param_list = NULL;
-method_body_nodes* temp_method_body_nodes = NULL;
-vardecl_list* temp_vardecl_list = NULL;
-vardecl_ids* temp_vardecl_ids = NULL;
-expression_list* expr_list;
-
 //For debug purposes
 #if (DEBUG > 0)
 int yydebug=1;
@@ -83,17 +71,9 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-%type <no> Program ProgramRep FieldDeclRep VarDeclRep StatementRep MethodInvocation MethodInvocationRep Assignment ParseArgs
-%type <vardecl_list> VarDecl
-%type <expression> Expr
-%type <method_decl> MethodDecl
-%type <method_header> MethodHeader
-%type <method_body> MethodBody
-%type <param_decl_list> FormalParams FormalParamsRep
-%type <field_decl> FieldDecl
-%type <statement_list> Statement
-
-%type <t> Type
+%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation ParseArgs Expr Type
+assign ExprRep Statementaux
+%type <vardec> VarDecl
 
 %right ASSIGN
 %left OR
@@ -110,31 +90,22 @@ int yydebug=1;
 %nonassoc IF
 %nonassoc ELSE
 
-
 %union{
 	char* s;
 	struct n* no;
-        struct type_vardecl_list* vardecl_list;
-        struct type_expression* expression;
-        struct type_method_decl* method_decl;
-        struct type_method_header* method_header;
-        struct type_method_body* method_body;
-        struct type_method_body_nodes* method_body_nodes;
-        struct type_param_decl_list* param_decl_list;
-        struct type_field_decl* field_decl;
-        struct type_statement_list* statement_list;
-	int t;
+    struct type_vardec* vardec;
+	char* t;
 }
 
 %%
 
-Program: CLASS ID LBRACE ProgramRep RBRACE { ast_root = insert_program($2, d_field_decl_list, d_method_decl_list);}
+Program: CLASS ID LBRACE ProgramRep RBRACE { }
 
         ;
 
 ProgramRep: {}
 
-        | MethodDecl ProgramRep {d_method_decl_list = insert_method_decl(d_method_decl_list, $1);}
+        | MethodDecl ProgramRep {}
 
         | FieldDecl ProgramRep {}
 
@@ -142,15 +113,11 @@ ProgramRep: {}
 
         ;
 
-MethodDecl: PUBLIC STATIC MethodHeader MethodBody {$$ = create_method_decl($3, $4);}
+MethodDecl: PUBLIC STATIC MethodHeader MethodBody {}
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {
-                                                                temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $4); 
-                                                                d_field_decl_list = insert_field_decl(d_field_decl_list, $3, temp_field_decl_ids);
-                                                                temp_field_decl_ids = NULL;
-                                                        }
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {}
 
         | error SEMICOLON {$$ = NULL;/*printf("FieldDeclError\n");*/}
 
@@ -158,88 +125,79 @@ FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {
 
 FieldDeclRep: {}
 
-            |COMMA ID FieldDeclRep { temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $2); }
+            |COMMA ID FieldDeclRep {}
 
             ;
 
-Type: BOOL {$$ = t_bool;}
+Type: BOOL {}
 
-    |INT {$$ = t_int;}
+    |INT {}
 
-    |DOUBLE {$$ = t_double;}
+    |DOUBLE {}
 
     ;
 
-MethodHeader: Type ID LPAR RPAR {$$ = create_method_header($1, $2, NULL);}
+MethodHeader: {}
 
-            | Type ID LPAR FormalParams RPAR {$$ = create_method_header($1, $2, $4); temp_param_list = NULL;}
+            | Type ID LPAR FormalParams RPAR {}
 
-            | VOID ID LPAR RPAR {$$ = create_method_header(t_void, $2, NULL);}
-
-            | VOID ID LPAR FormalParams RPAR {$$ = create_method_header(t_void, $2, $4); temp_param_list = NULL;}
+            | VOID ID LPAR FormalParams RPAR {}
 
             ;
 
-FormalParams: Type ID FormalParamsRep {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl($1, $2));}
+FormalParams: {}
 
-            | STR LSQ RSQ ID {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl(t_stringarray, $4));}
+            | Type ID FormalParamsRep {}
+
+            | STR LSQ RSQ ID {}
 
             ;
 
 FormalParamsRep: {}
 
-            | COMMA Type ID FormalParamsRep {temp_param_list = insert_param_decl(temp_param_list, create_param_decl($2, $3));}
+            | COMMA Type ID FormalParamsRep {}
 
             ;
 
-MethodBody: LBRACE MethodBodyRep RBRACE {$$ = create_method_body(temp_method_body_nodes); temp_method_body_nodes=NULL;}
+MethodBody: LBRACE MethodBodyRep RBRACE {}
 
             ;
 
 MethodBodyRep: {}
 
-            | Statement MethodBodyRep {temp_method_body_nodes = insert_mbody_statement(temp_method_body_nodes, $1);}
+            | Statement MethodBodyRep {}
 
-            | VarDecl MethodBodyRep {temp_method_body_nodes = insert_mbody_vardecl(temp_method_body_nodes, $1);}
+            | VarDecl MethodBodyRep {}
 
             ;
 
-VarDecl: Type ID VarDeclRep SEMICOLON {
-                                        temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);
-                                        $$ = temp_vardecl_list = insert_vardecl(temp_vardecl_list, $1, temp_vardecl_ids);
-                                        temp_vardecl_ids = NULL;
-                                        temp_vardecl_list = NULL;
-                                      }
+VarDecl: Type ID VarDeclRep SEMICOLON {}
 
         ;
 
 VarDeclRep: {}
 
-            |COMMA ID VarDeclRep {temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);}
+            |COMMA ID VarDeclRep {}
 
             ;
 
 Statement: LBRACE StatementRep RBRACE {}
 
-         | IF LPAR Expr RPAR Statement {}
+         | IF LPAR assign RPAR Statement {}
 
-         | IF LPAR Expr RPAR Statement ELSE Statement {}
+         | IF LPAR assign RPAR Statement ELSE Statement {}
 
-         | WHILE LPAR Expr RPAR Statement {}
+         | WHILE LPAR assign RPAR Statement {}
 
          | RETURN SEMICOLON {}
 
-         | RETURN Expr SEMICOLON {}
+         | RETURN assign SEMICOLON {}
 
          | SEMICOLON {}
 
-         | MethodInvocation SEMICOLON {}
+         | Statementaux SEMICOLON {}
 
-         | Assignment SEMICOLON {}
-
-         | ParseArgs SEMICOLON {}
-
-         | PRINT LPAR Expr RPAR SEMICOLON {}
+         | PRINT LPAR assign RPAR SEMICOLON {}
 
          | PRINT LPAR STRLIT RPAR SEMICOLON {}
 
@@ -254,25 +212,30 @@ StatementRep:   {}
 
         ;
 
+Statementaux: ParseArgs {}
+
+        | MethodInvocation {}
+
+        | ID ASSIGN assign {}
+
+        ;
+
 MethodInvocation: ID LPAR RPAR {}
 
-        | ID LPAR Expr MethodInvocationRep RPAR {}
+        | ID LPAR assign ExprRep RPAR {}
 
         | ID LPAR error RPAR {$$ = NULL;/*printf("MethodInvocationError\n");*/}
 
         ;
 
-MethodInvocationRep: {}
+ExprRep: {}
 
-        | COMMA Expr MethodInvocationRep {}
-
-        ;
-
-Assignment: ID ASSIGN Expr {}
+        | ExprRep COMMA assign {}
 
         ;
 
-ParseArgs: PARSEINT LPAR ID LSQ Expr RSQ RPAR {}
+
+ParseArgs: PARSEINT LPAR ID LSQ assign RSQ RPAR {}
 
           |PARSEINT LPAR error RPAR {$$ = NULL;/*printf("ParseArgsError\n");*/}
 
@@ -316,11 +279,9 @@ Expr: Expr PLUS Expr {}
 
      |PLUS Expr {} %prec NOT
 
-     |LPAR Expr RPAR {}
+     |LPAR assign RPAR {}
 
      |MethodInvocation {}
-
-     |Assignment {}
 
      |ParseArgs {}
 
@@ -328,15 +289,24 @@ Expr: Expr PLUS Expr {}
 
      |ID DOTLENGTH {}
 
-     |INTLIT { $$ = insert_expression_node(t_intlit, strdup($1), NULL); }
+     |INTLIT {/*printf("INTLIT\n");*/}
 
-     |REALLIT { $$ = insert_expression_node(t_reallit, strdup($1), NULL);}
+     |REALLIT {}
 
-     |BOOLLIT { $$ = insert_expression_node(t_boollit, strdup($1), NULL);}
+     |BOOLLIT {}
 
      |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
 
      ;
+
+assign: ID ASSIGN assign {}
+
+    | LPAR ID ASSIGN assign RPAR {}
+
+    | Expr {}
+    ;
+
+
 %%
 
 void yyerror (char *s){
