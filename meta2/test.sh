@@ -42,6 +42,9 @@ pad=$(printf '%*s' "$padlimit")
 pad=${pad// /-}
 padlength=50
 
+LEX_ONLY_ERRORS=("errors.java" "InsertionSort.java")
+YACC_ONLY_ERRORS=("assign_error.java" "exemplo_erro.java" "field_decl.java" "string_error.java" "string_error2.java")
+
 test(){
     # Test every .juc or .java file
     for filename in ./test/$1/input/*.{juc,java}; do
@@ -49,13 +52,17 @@ test(){
 
         # Run jucompiler with this test case
         if [ "$1" == "lex" ]; then
-            if [ $FILE == "errors.java" ] || [ $FILE == "InsertionSort.java" ]; then
+            if [[ " ${LEX_ONLY_ERRORS[@]} " =~ " ${FILE} " ]]; then
                 ./jucompiler -e1 < $filename > output.txt
             else
                 ./jucompiler -l < $filename > output.txt
             fi
         else
-            ./jucompiler -t < $filename > output.txt
+            if [[ " ${YACC_ONLY_ERRORS[@]} " =~ " ${FILE} " ]]; then
+                ./jucompiler -e2 < $filename > output.txt
+            else
+                ./jucompiler -t < $filename > output.txt
+            fi
         fi
 
         # Check if an .out file doesn't exist for this test
