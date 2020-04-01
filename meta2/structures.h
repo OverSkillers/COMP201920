@@ -17,7 +17,7 @@ typedef enum {t_add, t_sub, t_mul, t_div, t_mod,t_or, t_and, t_lt, t_le, t_gt, t
 /**
  * Enum defining the type of a variable
  * */
-typedef enum {t_int, t_char, t_double, t_bool, t_void, t_stringarray} t_var;
+typedef enum {t_int, t_double, t_bool, t_void, t_stringarray} t_var;
 
 /**
  * Enum defining the type of statement

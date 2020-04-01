@@ -304,45 +304,109 @@ expression* insert_expression_node(t_expr type, char* left, char* right){
 }
 
 void print_tree(program* root){
-	printf("Begin printing\n");
+	//printf("Begin printing\n");
 
-	if (root->id != NULL) printf("ID(%s)\n", root->id);
+	printf("Program\n");
+
+	if (root->id != NULL) printf("..ID(%s)\n", root->id);
 
 	if (root->field_decl_l != NULL){
-		printf("FieldDecls\n");
 		for (field_decl_list* temp1 = root->field_decl_l; temp1; temp1 = temp1->next){
-			printf("Type(%d)\n", temp1->data->type);
-			printf("Id(%s)\n", temp1->data->id);
+			printf("..FieldDecls\n");
+			if(temp1->data->type == 0){
+				printf("....Int\n");
+			}
+			if(temp1->data->type == 1){
+				printf("....Double\n");
+			}
+			if(temp1->data->type == 2){
+				printf("....Bool\n");
+			}
+			if(temp1->data->type == 3){
+				printf("....Void\n");
+			}
+			if(temp1->data->type == 4){
+				printf("....StringArray\n");
+			}
+			printf("....Id(%s)\n", temp1->data->id);
 		}
 	}
 
 	if (root->method_decl_l != NULL){
-		printf("Methods\n");
 		method_decl_list* temp;
 		for (temp = root->method_decl_l; temp; temp = temp->next){
-			printf("Header\n");
-			printf("MethodType(%d)\n", temp->data->header->type);
-			printf("MethodId(%s)\n", temp->data->header->id);
+			printf("..MethodDecl\n");
+			printf("....MethodHeader\n");
+			if(temp->data->header->type == 0){
+				printf("......Int\n");
+			}
+			if(temp->data->header->type == 1){
+				printf("......Double\n");
+			}
+			if(temp->data->header->type == 2){
+				printf("......Bool\n");
+			}
+			if(temp->data->header->type == 3){
+				printf("......Void\n");
+			}
+			if(temp->data->header->type == 4){
+				printf("......StringArray\n");
+			}
+			printf("......Id(%s)\n", temp->data->header->id);
 
 			if (temp->data->header->params != NULL){
-				printf("Params\n");
 				param_decl_list* params = temp->data->header->params;
 				for (param_decl_list* temp1 = params; temp1; temp1 = temp1->next){
-					printf("Type(%d)\n", temp1->data->type);
-					printf("Id(%s)\n", temp1->data->id);
+					printf("......MethodParams\n");
+					printf("........ParamDecl\n");
+					if(temp1->data->type == 0){
+						printf("..........Int\n");
+					}
+					if(temp1->data->type == 1){
+						printf("..........Double\n");
+					}
+					if(temp1->data->type == 2){
+						printf("..........Bool\n");
+					}
+					if(temp1->data->type == 3){
+						printf("..........Void\n");
+					}
+					if(temp1->data->type == 4){
+						printf("..........StringArray\n");
+					}
+					printf("..........Id(%s)\n", temp1->data->id);
 				}
 			}
 
 			if (temp->data->body != NULL){
-				printf("Body\n");
 				method_body_nodes* nodes = temp->data->body->nodes;
+				printf("....MethodBody\n");
 				for (method_body_nodes* temp1 = nodes; temp1; temp1 = temp1->next){
 					if (temp1->type == t_vardecl){
-						printf("VarDecl\n");
 						vardecl_list* decls = temp1->data.vars;
 						for (vardecl_list* temp2 = decls; temp2; temp2 = temp2->next){
-							printf("Type(%d)\n", temp2->data->type);
-							printf("Id(%s)\n", temp2->data->id);
+							printf("......VarDecl\n");
+							if(temp2->data->type == 0){
+								printf("........Int\n");
+							}
+							if(temp2->data->type == 1){
+								printf("........Double\n");
+							}
+							if(temp2->data->type == 2){
+								printf("........Bool\n");
+							}
+							if(temp2->data->type == 3){
+								printf("........Void\n");
+							}
+							if(temp2->data->type == 4){
+								printf("........StringArray\n");
+							}
+							printf("........Id(%s)\n", temp2->data->id);
+						}
+					}if (temp1->type == t_stmt){
+						statement_list* stmt = temp1->data.stmts;
+						for(statement_list* temp2 = stmt; temp2; temp2 = temp2->next){
+						printf("Statement\n");
 						}
 					}
 				}
