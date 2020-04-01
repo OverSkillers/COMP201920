@@ -292,6 +292,33 @@ statement_list* insert_statement(statement_list* head, statement* stmt){
 	return node;
 }
 
+void print_statement(statement* stmt){
+
+	if(stmt == NULL) return;
+
+	if(stmt->type == t_if){
+		printf("If\n");
+	}
+	else if (stmt->type == t_while){
+		printf("While\n");
+	}
+    else if (stmt->type == t_return){
+		printf("Return\n");
+	}
+    else if (stmt->type == t_call){
+		printf("Call\n");
+	}
+    else if (stmt->type == t_print){
+		printf("Print\n");
+	}
+    else if (stmt->type == t_parseargs){
+		printf("ParseArgs\n");
+	}
+    else if (stmt->type == t_assign){
+		printf("Assign\n");
+	}
+}
+
 
 expression* insert_expression_node(t_expr type, char* left, char* right){
 	expression* expr = malloc(sizeof(expression));
@@ -380,8 +407,8 @@ void print_tree(program* root){
 
 			if (temp->data->body != NULL){
 				method_body_nodes* nodes = temp->data->body->nodes;
-				printf("....MethodBody\n");
 				for (method_body_nodes* temp1 = nodes; temp1; temp1 = temp1->next){
+					printf("....MethodBody\n");
 					if (temp1->type == t_vardecl){
 						vardecl_list* decls = temp1->data.vars;
 						for (vardecl_list* temp2 = decls; temp2; temp2 = temp2->next){
@@ -406,7 +433,8 @@ void print_tree(program* root){
 					}if (temp1->type == t_stmt){
 						statement_list* stmt = temp1->data.stmts;
 						for(statement_list* temp2 = stmt; temp2; temp2 = temp2->next){
-						printf("Statement\n");
+							printf("......\n");
+							print_statement(temp2);
 						}
 					}
 				}
