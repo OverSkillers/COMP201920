@@ -153,6 +153,7 @@ int main(int argc, char **argv)
             arvore = 1;
             erros_lex = 1;
             yyparse();
+	    if (arvore == 1) print_tree(ast_root);
         }
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
@@ -168,9 +169,8 @@ int main(int argc, char **argv)
         erros_lex = 1;
         yylex();
         yyparse();
+	if (arvore == 1) print_tree(ast_root);
         }
-
-        if (arvore == 1) print_tree(ast_root);
 
 
     return 0;
