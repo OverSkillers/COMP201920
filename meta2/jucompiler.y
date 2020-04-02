@@ -18,6 +18,7 @@ extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
 
+
 extern program* ast_root;
 
 //TODO: Free these helper lists whenever they are set to NULL
@@ -84,6 +85,9 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
+/*%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation ParseArgs Expr Type Assignment ExprRep Statementaux Aux
+%type <vardec> VarDecl*/
+
 %type <no> Program ProgramRep FieldDeclRep VarDeclRep StatementRep MethodInvocation ParseArgs
 %type <vardecl_list> VarDecl
 %type <expression> Expr
@@ -110,7 +114,6 @@ int yydebug=1;
 
 %nonassoc IF
 %nonassoc ELSE
-
 
 %union{
 	char* s;
@@ -218,25 +221,25 @@ VarDeclRep: {}
 
             |COMMA ID VarDeclRep {temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);}
 
-            ;
+          ;
 
 Statement: LBRACE StatementRep RBRACE {}
 
-         | IF LPAR assign RPAR Statement {/*$$ = temp_stmt_list = insert_statement(temp_stmt_list, create_if_statement($3, $5, NULL));*/}
+         | IF LPAR  Aux RPAR Statement {/*$$ = temp_stmt_list = insert_statement(temp_stmt_list, create_if_statement($3, $5, NULL));*/}
 
-         | IF LPAR assign RPAR Statement ELSE Statement {}
+         | IF LPAR Aux RPAR Statement ELSE Statement {}
 
-         | WHILE LPAR assign RPAR Statement {}
+         | WHILE LPAR Aux RPAR Statement {}
 
          | RETURN SEMICOLON {}
 
-         | RETURN assign SEMICOLON {}
+         | RETURN Aux SEMICOLON {}
 
          | SEMICOLON {}
 
          | Statementaux SEMICOLON {}
 
-         | PRINT LPAR assign RPAR SEMICOLON {}
+         | PRINT LPAR Aux RPAR SEMICOLON {}
 
          | PRINT LPAR STRLIT RPAR SEMICOLON {}
 
@@ -255,26 +258,30 @@ Statementaux: ParseArgs {}
 
         | MethodInvocation {}
 
-        | ID ASSIGN assign {}
+        | ID ASSIGN Aux {}
 
         ;
 
 MethodInvocation: ID LPAR RPAR {}
 
-        | ID LPAR assign ExprRep RPAR {}
+        | ID LPAR Aux ExprRep RPAR {}
 
         | ID LPAR error RPAR {$$ = NULL;/*printf("MethodInvocationError\n");*/}
 
         ;
 
+Assignment: ID ASSIGN Aux {}
+
+        ;
+
 ExprRep: {}
 
-        | ExprRep COMMA assign {}
+        | ExprRep COMMA Aux {}
 
         ;
 
 
-ParseArgs: PARSEINT LPAR ID LSQ assign RSQ RPAR {}
+ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR {}
 
           |PARSEINT LPAR error RPAR {$$ = NULL;/*printf("ParseArgsError\n");*/}
 
@@ -318,13 +325,13 @@ Expr: Expr PLUS Expr {}
 
      |PLUS Expr {} %prec NOT
 
-     |LPAR assign RPAR {}
+     |LPAR Aux RPAR {}
 
      |MethodInvocation {}
 
      |ParseArgs {}
 
-     |ID {/*$$ = create_expression(t_strlit, )*/}
+     |ID {}
 
      |ID DOTLENGTH {}
 
@@ -338,9 +345,7 @@ Expr: Expr PLUS Expr {}
 
      ;
 
-assign: ID ASSIGN assign {}
-
-    | LPAR ID ASSIGN assign RPAR {}
+Aux: Assignment {}
 
     | Expr {}
     ;
