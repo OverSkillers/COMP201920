@@ -9,7 +9,6 @@
 #include <string.h>
 #include "y.tab.h"
 #include "ast.h"
-#include "structures.h"
 
 extern int yylineno,coluna,yyleng;
 extern int total_lines,total_columns,error_line_number_String,error_line_column_String,
@@ -19,18 +18,8 @@ int yylex(void);
 void yyerror (char *s);
 
 
-extern program* ast_root;
-
-//TODO: Free these helper lists whenever they are set to NULL
-field_decl_list* d_field_decl_list = NULL;
-field_decl_ids* temp_field_decl_ids = NULL;
-method_decl_list* d_method_decl_list = NULL;
-param_decl_list* temp_param_list = NULL;
-method_body_nodes* temp_method_body_nodes = NULL;
-vardecl_list* temp_vardecl_list = NULL;
-vardecl_ids* temp_vardecl_ids = NULL;
-statement_list* temp_stmt_list = NULL;
-expression_list* expr_list;
+struct n* tree;
+struct n* aux = NULL;
 
 //For debug purposes
 #if (DEBUG > 0)
@@ -85,20 +74,7 @@ int yydebug=1;
 %token <s> RESERVED INTLIT REALLIT ID STRLIT BOOLLIT
 
 
-/*%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation ParseArgs Expr Type Assignment ExprRep Statementaux Aux
-%type <vardec> VarDecl*/
-
-%type <no> Program ProgramRep FieldDeclRep VarDeclRep StatementRep MethodInvocation ParseArgs
-%type <vardecl_list> VarDecl
-%type <expression> Expr
-%type <method_decl> MethodDecl
-%type <method_header> MethodHeader
-%type <method_body> MethodBody
-%type <param_decl_list> FormalParams FormalParamsRep
-%type <field_decl> FieldDecl
-%type <statement_list> Statement
-
-%type <t> Type
+%type <no> Program ProgramRep MethodDecl FieldDecl FieldDeclRep MethodHeader FormalParams FormalParamsRep MethodBody MethodBodyRep VarDeclRep Statement StatementRep MethodInvocation ParseArgs Expr Assignment ExprRep Statementaux Aux VarDecl Type
 
 %right ASSIGN
 %left OR
@@ -118,236 +94,220 @@ int yydebug=1;
 %union{
 	char* s;
 	struct n* no;
-        struct type_vardecl_list* vardecl_list;
-        struct type_expression* expression;
-        struct type_method_decl* method_decl;
-        struct type_method_header* method_header;
-        struct type_method_body* method_body;
-        struct type_method_body_nodes* method_body_nodes;
-        struct type_param_decl_list* param_decl_list;
-        struct type_field_decl* field_decl;
-        struct type_statement_list* statement_list;
-	int t;
 }
 
 %%
 
-Program: CLASS ID LBRACE ProgramRep RBRACE { ast_root = insert_program($2, d_field_decl_list, d_method_decl_list);}
+Program: CLASS ID LBRACE ProgramRep RBRACE {tree = create_node("Program","NULL");node* temp= create_node("Id",$2);add_next(temp,$4);add_son(tree,temp);$$ = tree;}
 
         ;
 
-ProgramRep: {}
+ProgramRep: {$$ = NULL;}
 
-        | MethodDecl ProgramRep {d_method_decl_list = insert_method_decl(d_method_decl_list, $1);}
+        | MethodDecl ProgramRep {$$=$2;add_next($2,$1);}
 
-        | FieldDecl ProgramRep {}
+        | FieldDecl ProgramRep {$$=$2;add_next($2,$1);}
 
-        | SEMICOLON ProgramRep {}
-
-        ;
-
-MethodDecl: PUBLIC STATIC MethodHeader MethodBody {$$ = create_method_decl($3, $4);}
+        | SEMICOLON ProgramRep {$$=$2;}
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {
-                                                                temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $4); 
-                                                                d_field_decl_list = insert_field_decl(d_field_decl_list, $3, temp_field_decl_ids);
-                                                                temp_field_decl_ids = NULL;
-                                                        }
+MethodDecl: PUBLIC STATIC MethodHeader MethodBody {node* temp; temp = create_node("MethodDecl","NULL");add_son(temp,$3);add_son(temp,$4);$$=temp;}
+
+        ;
+
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$4);add_son(temp,$3);add_son(temp,temp1);add_next(temp,$5);$$ = temp; node* temp3 = temp;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp->son->type,"NULL");temp3 = change_son_node(temp,tipo);}$$ = temp;}
 
         | error SEMICOLON {$$ = NULL;/*printf("FieldDeclError\n");*/}
 
         ;
 
-FieldDeclRep: {}
+FieldDeclRep: {$$ = NULL;}
 
-            |COMMA ID FieldDeclRep { temp_field_decl_ids = insert_field_decl_id(temp_field_decl_ids, $2); }
+            |COMMA ID FieldDeclRep {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp); $$ = $3;}
 
             ;
 
-Type: BOOL {$$ = t_bool;}
+Type: BOOL {node* temp = create_node("Bool","NULL");$$ = temp;}
 
-    |INT {$$ = t_int;}
+    |INT {node* temp = create_node("Int","NULL");$$ = temp;}
 
-    |DOUBLE {$$ = t_double;}
+    |DOUBLE {node* temp = create_node("Double","NULL");$$ = temp;}
 
     ;
 
-MethodHeader: {}
+MethodHeader: {$$ = NULL;}
 
-            | Type ID LPAR FormalParams RPAR {$$ = create_method_header($1, $2, $4); temp_param_list = NULL;}
+            | Type ID LPAR FormalParams RPAR {node* temp = create_node("MethodHeader","NULL");node* temp1 = create_node("Id",$2);node* temp2 = create_node("MethodParams","NULL");add_son(temp2,$4);add_son(temp,$1);add_son(temp,temp1);add_son(temp1,temp2);$$ = temp;}
 
-            | VOID ID LPAR FormalParams RPAR {$$ = create_method_header(t_void, $2, $4); temp_param_list = NULL;}
-
-            ;
-
-FormalParams: {}
-
-            | Type ID FormalParamsRep {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl($1, $2));}
-
-            | STR LSQ RSQ ID {$$ = temp_param_list = insert_param_decl(temp_param_list, create_param_decl(t_stringarray, $4));}
+            | VOID ID LPAR FormalParams RPAR {node* temp = create_node("MethodHeader","NULL");node* temp1 = create_node("Void","NULL");node* temp2 = create_node("Id",$2);node* temp3 = create_node("MethodParams","NULL");add_son(temp3,$4);add_son(temp,temp1);
+add_son(temp,temp2);add_son(temp,temp3);$$=temp;}
 
             ;
 
-FormalParamsRep: {}
+FormalParams: {$$ = NULL;}
 
-            | COMMA Type ID FormalParamsRep {temp_param_list = insert_param_decl(temp_param_list, create_param_decl($2, $3));}
+            | Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node * temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp);$$=$3;}
 
-            ;
-
-MethodBody: LBRACE MethodBodyRep RBRACE {$$ = create_method_body(temp_method_body_nodes); temp_method_body_nodes=NULL;}
+            | STR LSQ RSQ ID {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("StringArray","NULL");node* temp2 = create_node("Id",$4);add_son(temp1,temp2);add_son(temp,temp1);$$ = temp;}
 
             ;
 
-MethodBodyRep: {}
+FormalParamsRep: {$$ = NULL;}
 
-            | Statement MethodBodyRep {temp_method_body_nodes = insert_mbody_statement(temp_method_body_nodes, $1);}
-
-            | VarDecl MethodBodyRep {temp_method_body_nodes = insert_mbody_vardecl(temp_method_body_nodes, $1);}
+            | COMMA Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("Id",$3);add_son(temp,$2);add_son(temp,temp1);add_next($4,temp1);$$ = $4;}
 
             ;
 
-VarDecl: Type ID VarDeclRep SEMICOLON {
-                                        temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);
-                                        $$ = temp_vardecl_list = insert_vardecl(temp_vardecl_list, $1, temp_vardecl_ids);
-                                        temp_vardecl_ids = NULL;
-                                        temp_vardecl_list = NULL;
-                                      }
+MethodBody: LBRACE MethodBodyRep RBRACE {node* temp = create_node("MethodBody","NULL");add_son(temp,$2);$$ = temp;}
+
+            ;
+
+MethodBodyRep: {$$ = NULL;}
+
+            | Statement MethodBodyRep {node* temp = $2; add_next(temp,$1);$$=temp;}
+
+            | VarDecl MethodBodyRep {node* temp = $2; add_next(temp,$1);$$=temp;}
+
+            ;
+
+VarDecl: Type ID VarDeclRep SEMICOLON {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);$$ = temp; node* temp3 = temp;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp->son->type,"NULL");temp3 = change_son_node(temp,tipo);}$$ = temp;}
 
         ;
 
-VarDeclRep: {}
+VarDeclRep: {$$ = NULL;}
 
-            |COMMA ID VarDeclRep {temp_vardecl_ids = insert_vardecl_id(temp_vardecl_ids, $2);}
+            |COMMA ID VarDeclRep {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp);$$ = $3;}
 
           ;
 
-Statement: LBRACE StatementRep RBRACE {}
+Statement: LBRACE StatementRep RBRACE {if(is_block($2)==true){node* temp = create_node("Block","NULL");add_son(temp,$2);$$=temp;}else($$ = $2);}
 
-         | IF LPAR  Aux RPAR Statement {/*$$ = temp_stmt_list = insert_statement(temp_stmt_list, create_if_statement($3, $5, NULL));*/}
+         | IF LPAR  Aux RPAR Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son($$,temp1);}else{add_son($$,$5);}node* temp2 = create_node("Block","NULL");add_son($$,temp2);}
 
-         | IF LPAR Aux RPAR Statement ELSE Statement {}
+         | IF LPAR Aux RPAR Statement ELSE Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son($$,temp1);}else{add_son($$,$5);}if($7 == NULL || is_block($7) == true){node* temp2 = create_node("Block","NULL");add_son(temp2,$7);add_son($$,temp2);}else{add_son($$,$7);} }
 
-         | WHILE LPAR Aux RPAR Statement {}
+         | WHILE LPAR Aux RPAR Statement {node* temp = create_node("While","NULL");add_son($3,temp);$$=$3;}
 
-         | RETURN SEMICOLON {}
+         | RETURN SEMICOLON {node* temp = create_node("Return","NULL");$$ = temp;}
 
-         | RETURN Aux SEMICOLON {}
+         | RETURN Aux SEMICOLON {node* temp = create_node("Return","NULL");add_son(temp,$2);$$ = temp;}
 
-         | SEMICOLON {}
+         | SEMICOLON {$$ = NULL;}
 
-         | Statementaux SEMICOLON {}
+         | Statementaux SEMICOLON {$$ = $1;}
 
-         | PRINT LPAR Aux RPAR SEMICOLON {}
+         | PRINT LPAR Aux RPAR SEMICOLON {node* temp = create_node("Print","NULL");
+add_son(temp,$3);$$ = temp;}
 
-         | PRINT LPAR STRLIT RPAR SEMICOLON {}
+         | PRINT LPAR STRLIT RPAR SEMICOLON {node* temp = create_node("Print","NULL");node* temp1 = create_node("StrLit","NULL");
+add_son(temp,temp1);$$ = temp;}
 
          | error SEMICOLON {$$ = NULL;/*printf("StatementError\n");*/}
 
          ;
 
 
-StatementRep:   {}
+StatementRep:   {$$ = NULL;}
 
-         | Statement StatementRep {}
-
-        ;
-
-Statementaux: ParseArgs {}
-
-        | MethodInvocation {}
-
-        | ID ASSIGN Aux {}
+         | Statement StatementRep {node* temp = NULL; add_next(temp,$1);$$=temp;}
 
         ;
 
-MethodInvocation: ID LPAR RPAR {}
+Statementaux: ParseArgs {$$ = $1;}
 
-        | ID LPAR Aux ExprRep RPAR {}
+        | MethodInvocation {$$ = $1;}
 
-        | ID LPAR error RPAR {$$ = NULL;/*printf("MethodInvocationError\n");*/}
-
-        ;
-
-Assignment: ID ASSIGN Aux {}
+        | ID ASSIGN Aux {node* temp1 = create_node("Assign","NULL");node* temp2 = create_node("Id",$1);add_son(temp1,temp2);add_son(temp1,$3);$$=temp1;}
 
         ;
 
-ExprRep: {}
+MethodInvocation: ID LPAR RPAR {node* temp1 = create_node("Call","NULL");node* temp2 = create_node("Id",$1);add_son(temp1,temp2);$$=temp1;}
 
-        | ExprRep COMMA Aux {}
+        | ID LPAR Aux ExprRep RPAR {node* temp1 = create_node("Call","NULL");node* temp2 = create_node("Id",$1);add_son(temp1,temp2);add_son(temp1,$3);add_son(temp1,$4);$$=temp1;}
+
+        | ID LPAR error RPAR {$$ = NULL;}
+
+        ;
+
+Assignment: ID ASSIGN Aux {node* temp1 = create_node("Assign","NULL");node* temp2 = create_node("Id",$1); add_son(temp1,temp2);add_son(temp1,$3);$$=temp1;}
+
+        ;
+
+ExprRep: {$$ = NULL;}
+
+        | ExprRep COMMA Aux {node* temp = $1; add_next(temp,$3);$$ = temp;}
 
         ;
 
 
-ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR {}
+ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR {node* temp = create_node("ParseArgs","NULL");node* temp1 = create_node("Id",$3);add_son(temp,temp1);add_son(temp,$5);$$ = temp;}
 
-          |PARSEINT LPAR error RPAR {$$ = NULL;/*printf("ParseArgsError\n");*/}
+          |PARSEINT LPAR error RPAR {$$ = NULL;}
 
         ;
 
-Expr: Expr PLUS Expr {}
+Expr: Expr PLUS Expr {node* temp = create_node("Add","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr MINUS Expr {}
+     |Expr MINUS Expr {node* temp = create_node("Sub","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr STAR Expr {}
+     |Expr STAR Expr {node* temp = create_node("Mul","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr DIV Expr {}
+     |Expr DIV Expr {node* temp = create_node("Div","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr MOD Expr {}
+     |Expr MOD Expr {node* temp = create_node("Mod","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr AND Expr {}
+     |Expr AND Expr {node* temp = create_node("And","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr OR Expr {}
+     |Expr OR Expr {node* temp = create_node("Or","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr XOR Expr {}
+     |Expr XOR Expr {node* temp = create_node("Xor","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr LSHIFT Expr {}
+     |Expr LSHIFT Expr {node* temp = create_node("Lshift","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr RSHIFT Expr {}
+     |Expr RSHIFT Expr {node* temp = create_node("Rshift","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr EQ Expr {}
+     |Expr EQ Expr {node* temp = create_node("Eq","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr GE Expr {}
+     |Expr GE Expr {node* temp = create_node("Ge","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr GT Expr {}
+     |Expr GT Expr {node* temp = create_node("Gt","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr LE Expr {}
+     |Expr LE Expr {node* temp = create_node("Le","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr LT Expr {}
+     |Expr LT Expr {node* temp = create_node("Lt","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr NE Expr {}
+     |Expr NE Expr {node* temp = create_node("Not","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |MINUS Expr {} %prec NOT
+     |MINUS Expr {node* temp = create_node("Minus","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
-     |NOT Expr {} %prec NOT
+     |NOT Expr {node* temp = create_node("NOT","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
-     |PLUS Expr {} %prec NOT
+     |PLUS Expr {node* temp = create_node("PLUS","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
-     |LPAR Aux RPAR {}
+     |LPAR Aux RPAR {$$ = $2;}
 
-     |MethodInvocation {}
+     |MethodInvocation {$$ = $1;}
 
-     |ParseArgs {}
+     |ParseArgs {$$ = $1;}
 
-     |ID {}
+     |ID {node* temp = create_node("Id",$1); $$ = temp;}
 
-     |ID DOTLENGTH {}
+     |ID DOTLENGTH {node* temp = create_node("Id",$1);node* temp1 = create_node("Length","NULL");add_son(temp1,temp);$$=temp1;}
 
-     |INTLIT { $$ = insert_expression_node(t_intlit, strdup($1), NULL); }
+     |INTLIT {node* temp = create_node("DecLit",$1);$$=temp;}
 
-     |REALLIT { $$ = insert_expression_node(t_reallit, strdup($1), NULL);}
+     |REALLIT {node* temp = create_node("RealLit",$1);$$=temp;}
 
-     |BOOLLIT { $$ = insert_expression_node(t_boollit, strdup($1), NULL);}
+     |BOOLLIT {node* temp = create_node("BoolLit",$1);$$=temp;}
 
      |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
 
      ;
 
-Aux: Assignment {}
+Aux: Assignment {$$ = $1;}
 
-    | Expr {}
+    | Expr {$$ = $1;}
     ;
 
 

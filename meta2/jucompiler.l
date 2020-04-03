@@ -6,7 +6,6 @@
     #include <string.h>
     #include "y.tab.h"
     #include "ast.h"
-    #include "structures.h"
 
     //If argument -1 is received, set as 1
     int print_tokens;
@@ -41,7 +40,7 @@
     //Hold current package ID
     char current_package_id[MAX_STR];
 
-    program* ast_root;
+    extern node* tree;
 %}
 ENTER                                   \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
@@ -153,7 +152,7 @@ int main(int argc, char **argv)
             arvore = 1;
             erros_lex = 1;
             yyparse();
-	    if (arvore == 1) print_tree(ast_root);
+            if (arvore == 1) print_tree(0,tree);
         }
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
@@ -169,7 +168,7 @@ int main(int argc, char **argv)
         erros_lex = 1;
         yylex();
         yyparse();
-	if (arvore == 1) print_tree(ast_root);
+        if (arvore == 1) print_tree(0,tree);
         }
 
 
