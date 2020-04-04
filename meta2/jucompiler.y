@@ -16,6 +16,8 @@ error_line_number_Comment,error_line_column_Comment,linha;
 extern char* yytext;
 int yylex(void);
 void yyerror (char *s);
+int erro = 0;
+int erroField = 0;
 
 
 struct n* tree;
@@ -104,27 +106,27 @@ Program: CLASS ID LBRACE ProgramRep RBRACE {tree = create_node("Program","NULL")
 
 ProgramRep: {$$ = NULL;}
 
-        | MethodDecl ProgramRep {$$=$2;add_next($2,$1);}
+        | MethodDecl ProgramRep {add_next($1,$2);$$=$1;}
 
-        | FieldDecl ProgramRep {$$=$2;add_next($2,$1);}
+        | FieldDecl ProgramRep {add_next($1,$2);$$=$1;}
 
         | SEMICOLON ProgramRep {$$=$2;}
 
         ;
 
-MethodDecl: PUBLIC STATIC MethodHeader MethodBody {node* temp; temp = create_node("MethodDecl","NULL");add_son(temp,$3);add_son(temp,$4);$$=temp;}
+MethodDecl: PUBLIC STATIC MethodHeader MethodBody {node* temp; temp = create_node("MethodDecl","NULL");add_son(temp,$3);add_son(temp,$4);/*printf("%s\n",temp->son->name);*/$$=temp;}
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$4);add_son(temp,$3);add_son(temp,temp1);add_next(temp,$5);$$ = temp; node* temp3 = temp;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp->son->type,"NULL");temp3 = change_son_node(temp,tipo);}$$ = temp;}
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$4);add_son(temp,$3);add_son(temp,temp1);add_next(temp,$5);$$ = temp; node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){;temp3=temp3->next;node* tipo = create_node(temp4,"NULL");temp3 = change_son_node(temp3,tipo);}$$ = temp;}
 
-        | error SEMICOLON {$$ = NULL;/*printf("FieldDeclError\n");*/}
+        | error SEMICOLON {$$ = NULL;erro = 1;/*printf("FieldDeclError\n");*/}
 
         ;
 
 FieldDeclRep: {$$ = NULL;}
 
-            |COMMA ID FieldDeclRep {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp); $$ = $3;}
+            |COMMA ID FieldDeclRep {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next(temp,$3); $$ = temp;}
 
             ;
 
@@ -138,7 +140,7 @@ Type: BOOL {node* temp = create_node("Bool","NULL");$$ = temp;}
 
 MethodHeader: {$$ = NULL;}
 
-            | Type ID LPAR FormalParams RPAR {node* temp = create_node("MethodHeader","NULL");node* temp1 = create_node("Id",$2);node* temp2 = create_node("MethodParams","NULL");add_son(temp2,$4);add_son(temp,$1);add_son(temp,temp1);add_son(temp1,temp2);$$ = temp;}
+            | Type ID LPAR FormalParams RPAR {node* temp = create_node("MethodHeader","NULL");node* temp1 = create_node("Id",$2);node* temp2 = create_node("MethodParams","NULL");add_son(temp2,$4);add_son(temp,$1);add_son(temp,temp1);add_son(temp,temp2);$$ = temp;}
 
             | VOID ID LPAR FormalParams RPAR {node* temp = create_node("MethodHeader","NULL");node* temp1 = create_node("Void","NULL");node* temp2 = create_node("Id",$2);node* temp3 = create_node("MethodParams","NULL");add_son(temp3,$4);add_son(temp,temp1);
 add_son(temp,temp2);add_son(temp,temp3);$$=temp;}
@@ -147,15 +149,15 @@ add_son(temp,temp2);add_son(temp,temp3);$$=temp;}
 
 FormalParams: {$$ = NULL;}
 
-            | Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node * temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp);$$=$3;}
+            | Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);$$=temp;}
 
-            | STR LSQ RSQ ID {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("StringArray","NULL");node* temp2 = create_node("Id",$4);add_son(temp1,temp2);add_son(temp,temp1);$$ = temp;}
+            | STR LSQ RSQ ID {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("StringArray","NULL");node* temp2 = create_node("Id",$4);add_next(temp1,temp2);add_son(temp,temp1);$$ = temp;}
 
             ;
 
 FormalParamsRep: {$$ = NULL;}
 
-            | COMMA Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("Id",$3);add_son(temp,$2);add_son(temp,temp1);add_next($4,temp1);$$ = $4;}
+            | COMMA Type ID FormalParamsRep {node* temp = create_node("ParamDecl","NULL");node* temp1 = create_node("Id",$3);add_son(temp,$2);add_son(temp,temp1);add_next(temp,$4);$$ = temp;}
 
             ;
 
@@ -165,29 +167,29 @@ MethodBody: LBRACE MethodBodyRep RBRACE {node* temp = create_node("MethodBody","
 
 MethodBodyRep: {$$ = NULL;}
 
-            | Statement MethodBodyRep {node* temp = $2; add_next(temp,$1);$$=temp;}
+            | Statement MethodBodyRep {node* temp = $1; if(temp == NULL){$$ = $2;}else{add_next(temp,$2);$$=temp;}}
 
-            | VarDecl MethodBodyRep {node* temp = $2; add_next(temp,$1);$$=temp;}
+            | VarDecl MethodBodyRep {node* temp = $1; if(temp == NULL){$$ = $2;}else{add_next(temp,$2);$$=temp;}}
 
             ;
 
-VarDecl: Type ID VarDeclRep SEMICOLON {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);$$ = temp; node* temp3 = temp;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp->son->type,"NULL");temp3 = change_son_node(temp,tipo);}$$ = temp;}
+VarDecl: Type ID VarDeclRep SEMICOLON {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp4,"NULL");temp3 = change_son_node(temp3,tipo);}$$ = temp;}
 
         ;
 
 VarDeclRep: {$$ = NULL;}
 
-            |COMMA ID VarDeclRep {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next($3,temp);$$ = $3;}
+            |COMMA ID VarDeclRep {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,temp1);add_next(temp,$3);$$ = temp;}
 
           ;
 
-Statement: LBRACE StatementRep RBRACE {if(is_block($2)==true){node* temp = create_node("Block","NULL");add_son(temp,$2);$$=temp;}else($$ = $2);}
+Statement: LBRACE StatementRep RBRACE {if(is_block($2)==true){node* temp = create_node("Block","NULL");add_son(temp,$2);$$=temp;}else{$$ = $2;};}
 
-         | IF LPAR  Aux RPAR Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son($$,temp1);}else{add_son($$,$5);}node* temp2 = create_node("Block","NULL");add_son($$,temp2);}
+         | IF LPAR Aux RPAR Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son     (temp,temp1);}else{add_son($$,$5);}node* temp2 = create_node("Block","NULL");add_son($$,temp2);}
 
-         | IF LPAR Aux RPAR Statement ELSE Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son($$,temp1);}else{add_son($$,$5);}if($7 == NULL || is_block($7) == true){node* temp2 = create_node("Block","NULL");add_son(temp2,$7);add_son($$,temp2);}else{add_son($$,$7);} }
+         | IF LPAR Aux RPAR Statement ELSE Statement {node* temp = create_node("If","NULL");add_son(temp,$3);$$ = temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son(temp,temp1);}else{add_son($$,$5);}if($7 == NULL || is_block($7) == true){node* temp2 = create_node("Block","NULL");add_son(temp2,$7);add_son(temp,temp2);}else{add_son($$,$7);} }
 
-         | WHILE LPAR Aux RPAR Statement {node* temp = create_node("While","NULL");add_son($3,temp);$$=$3;}
+         | WHILE LPAR Aux RPAR Statement {node* temp = create_node("While","NULL");add_son(temp,$3);$$=temp;if($5 == NULL || is_block($5) == true){node* temp1 = create_node("Block","NULL");add_son(temp1,$5);add_son     (temp,temp1);}else{add_son($$,$5);}}
 
          | RETURN SEMICOLON {node* temp = create_node("Return","NULL");$$ = temp;}
 
@@ -200,17 +202,17 @@ Statement: LBRACE StatementRep RBRACE {if(is_block($2)==true){node* temp = creat
          | PRINT LPAR Aux RPAR SEMICOLON {node* temp = create_node("Print","NULL");
 add_son(temp,$3);$$ = temp;}
 
-         | PRINT LPAR STRLIT RPAR SEMICOLON {node* temp = create_node("Print","NULL");node* temp1 = create_node("StrLit","NULL");
+         | PRINT LPAR STRLIT RPAR SEMICOLON {node* temp = create_node("Print","NULL");node* temp1 = create_node("StrLit",$3);
 add_son(temp,temp1);$$ = temp;}
 
-         | error SEMICOLON {$$ = NULL;/*printf("StatementError\n");*/}
+         | error SEMICOLON {$$ = NULL;erro = 1;/*printf("StatementError\n");*/}
 
          ;
 
 
 StatementRep:   {$$ = NULL;}
 
-         | Statement StatementRep {node* temp = NULL; add_next(temp,$1);$$=temp;}
+         | Statement StatementRep {if($1 == NULL){$$ = $2;}else{add_next($1,$2);$$=$1;}}
 
         ;
 
@@ -224,9 +226,9 @@ Statementaux: ParseArgs {$$ = $1;}
 
 MethodInvocation: ID LPAR RPAR {node* temp1 = create_node("Call","NULL");node* temp2 = create_node("Id",$1);add_son(temp1,temp2);$$=temp1;}
 
-        | ID LPAR Aux ExprRep RPAR {node* temp1 = create_node("Call","NULL");node* temp2 = create_node("Id",$1);add_son(temp1,temp2);add_son(temp1,$3);add_son(temp1,$4);$$=temp1;}
+        | ID LPAR Aux ExprRep RPAR {node* temp1 = create_node("Call","NULL");node* temp2 = create_node("Id",$1); add_son(temp1,temp2);add_son(temp1,$3);add_son(temp1,$4);$$=temp1;}
 
-        | ID LPAR error RPAR {$$ = NULL;}
+        | ID LPAR error RPAR {$$ = NULL;erro = 1;}
 
         ;
 
@@ -236,14 +238,14 @@ Assignment: ID ASSIGN Aux {node* temp1 = create_node("Assign","NULL");node* temp
 
 ExprRep: {$$ = NULL;}
 
-        | ExprRep COMMA Aux {node* temp = $1; add_next(temp,$3);$$ = temp;}
+        | ExprRep COMMA Aux {node* temp = $1;if(temp == NULL){$$ = $3;}else{add_next(temp,$3);$$ = temp;}}
 
         ;
 
 
 ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR {node* temp = create_node("ParseArgs","NULL");node* temp1 = create_node("Id",$3);add_son(temp,temp1);add_son(temp,$5);$$ = temp;}
 
-          |PARSEINT LPAR error RPAR {$$ = NULL;}
+          |PARSEINT LPAR error RPAR {$$ = NULL;erro = 1;}
 
         ;
 
@@ -281,9 +283,9 @@ Expr: Expr PLUS Expr {node* temp = create_node("Add","NULL");add_son(temp,$1);ad
 
      |MINUS Expr {node* temp = create_node("Minus","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
-     |NOT Expr {node* temp = create_node("NOT","NULL");add_son(temp,$2);$$=temp;} %prec NOT
+     |NOT Expr {node* temp = create_node("Not","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
-     |PLUS Expr {node* temp = create_node("PLUS","NULL");add_son(temp,$2);$$=temp;} %prec NOT
+     |PLUS Expr {node* temp = create_node("Plus","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
      |LPAR Aux RPAR {$$ = $2;}
 
@@ -291,7 +293,7 @@ Expr: Expr PLUS Expr {node* temp = create_node("Add","NULL");add_son(temp,$1);ad
 
      |ParseArgs {$$ = $1;}
 
-     |ID {node* temp = create_node("Id",$1); $$ = temp;}
+     |ID {node* temp = create_node("Id",$1);$$ = temp;}
 
      |ID DOTLENGTH {node* temp = create_node("Id",$1);node* temp1 = create_node("Length","NULL");add_son(temp1,temp);$$=temp1;}
 
@@ -301,7 +303,7 @@ Expr: Expr PLUS Expr {node* temp = create_node("Add","NULL");add_son(temp,$1);ad
 
      |BOOLLIT {node* temp = create_node("BoolLit",$1);$$=temp;}
 
-     |LPAR error RPAR {$$ = NULL;/*printf("ExprError\n");*/}
+     |LPAR error RPAR {$$ = NULL;erro = 1;/*printf("ExprError\n");*/}
 
      ;
 

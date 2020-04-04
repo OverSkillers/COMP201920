@@ -19,8 +19,8 @@ void add_next(node* n, node* n2){
 		return;
 	}
 	node* temp = n;
-	printf("Adding next %s(%s) ", n2->name, n2->type);
-	printf("to %s(%s)\n", n->name, n->type);
+	/*printf("Adding next %s(%s) ", n2->name, n2->type);
+	printf("to %s(%s)\n", n->name, n->type);*/
 	if (temp->next == NULL){
 		temp->next = n2;
 	} else {
@@ -35,8 +35,8 @@ void add_son(node* n, node* son){
 	if (n == NULL || son == NULL){
 		return;
 	}
-	printf("Adding son %s(%s) ", son->name, son->type);
-	printf("to %s(%s)\n", n->name, n->type);
+	/*printf("Adding son %s(%s) ", son->name, son->type);
+	printf("to %s(%s)\n", n->name, n->type);*/
 	if (n->son == NULL){
 		n->son = son;
 	} else {
@@ -60,6 +60,8 @@ void print_tree(int level, node* n){
 	for (int i = 0; i < level; i++) printf("..");
 	if(strcmp(n->type,"NULL")==0){
 		printf("%s\n", n->name);
+	}else if(strcmp(n->name,"StrLit")==0){
+		printf("%s(\"%s\")\n",n->name,n->type);
 	}else{
 		printf("%s(%s)\n",n->name,n->type);
 	}

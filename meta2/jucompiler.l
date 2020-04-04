@@ -41,6 +41,7 @@
     char current_package_id[MAX_STR];
 
     extern node* tree;
+    extern int erro;
 %}
 ENTER                                   \n|\r|\r\n
 ID                                      [A-Za-z_$][0-9A-Za-z_$]*
@@ -152,7 +153,12 @@ int main(int argc, char **argv)
             arvore = 1;
             erros_lex = 1;
             yyparse();
-            if (arvore == 1) print_tree(0,tree);
+            if(erro == 0){
+                if (arvore == 1){
+                    print_tree(0,tree);
+                    free_tree(tree);
+                }
+            }
         }
         if (strcmp(argv[1], "-e2")==0){
             print_tokens = 0;
@@ -168,7 +174,12 @@ int main(int argc, char **argv)
         erros_lex = 1;
         yylex();
         yyparse();
-        if (arvore == 1) print_tree(0,tree);
+        if(erro == 0){
+                if (arvore == 1){
+                    print_tree(0,tree);
+                    free_tree(tree);
+                }
+            }
         }
 
 
