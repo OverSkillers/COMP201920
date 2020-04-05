@@ -118,7 +118,7 @@ MethodDecl: PUBLIC STATIC MethodHeader MethodBody {node* temp; temp = create_nod
 
         ;
 
-FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$4);add_son(temp,$3);add_son(temp,temp1);add_next(temp,$5);$$ = temp; node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){;temp3=temp3->next;node* tipo = create_node(temp4,"NULL");temp3 = change_son_node(temp3,tipo);}$$ = temp;}
+FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON {node* temp = create_node("FieldDecl","NULL");node* temp1 = create_node("Id",$4);add_son(temp,$3);add_son(temp,temp1);add_next(temp,$5);$$ = temp; node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){;temp3=temp3->next;node* tipo = create_node(temp4,"NULL");add_next(tipo,temp3->son);temp3->son = tipo;}$$ = temp;}
 
         | error SEMICOLON {$$ = NULL;erro = 1;/*printf("FieldDeclError\n");*/}
 
@@ -173,7 +173,7 @@ MethodBodyRep: {$$ = NULL;}
 
             ;
 
-VarDecl: Type ID VarDeclRep SEMICOLON {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp4,"NULL");temp3 = change_son_node(temp3,tipo);}$$ = temp;}
+VarDecl: Type ID VarDeclRep SEMICOLON {node* temp = create_node("VarDecl","NULL");node* temp1 = create_node("Id",$2);add_son(temp,$1);add_son(temp,temp1);add_next(temp,$3);node* temp3 = temp;char* temp4 = temp->son->name;while(temp3->next!=NULL){temp3=temp3->next;node* tipo = create_node(temp4,"NULL");add_next(tipo,temp3->son);temp3->son = tipo;}$$ = temp;}
 
         ;
 

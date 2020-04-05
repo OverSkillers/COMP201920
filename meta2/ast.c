@@ -8,12 +8,6 @@ node* create_node(const char* name,const char* type){
 	return n;
 }
 
-node* change_son_node(node *origin, node *new_son){
-  add_next(new_son,origin->son);
-  origin->son = new_son;
-  return origin;
-}
-
 void add_next(node* n, node* n2){
 	if (n == NULL || n2 == NULL){
 		return;
@@ -49,11 +43,7 @@ bool is_block(node* n){
 	return false;
 }
 
-node* new_id(const char* name,const char* type){
-	char* arr = (char *) malloc(strlen(name) + 5);
-	sprintf(arr, "Id(%s)", name);
-	return create_node(arr,type);
-}
+
 
 void print_tree(int level, node* n){
 	if (n == NULL) return;
