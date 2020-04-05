@@ -279,7 +279,7 @@ Expr: Expr PLUS Expr {node* temp = create_node("Add","NULL");add_son(temp,$1);ad
 
      |Expr LT Expr {node* temp = create_node("Lt","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
-     |Expr NE Expr {node* temp = create_node("Not","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
+     |Expr NE Expr {node* temp = create_node("Ne","NULL");add_son(temp,$1);add_son(temp,$3);$$=temp;}
 
      |MINUS Expr {node* temp = create_node("Minus","NULL");add_son(temp,$2);$$=temp;} %prec NOT
 
