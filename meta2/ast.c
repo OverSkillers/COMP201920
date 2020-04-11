@@ -1,7 +1,7 @@
 #include "ast.h"
 
 node* create_node(const char* name,const char* type){
-    #if (DEBUG == 2)
+    #if (DEBUG > 0)
     printf("Creating node %s\n", name);
     #endif
 
@@ -17,7 +17,7 @@ void add_next(node* n, node* n2){
     }
     node* temp = n;
 
-    #if (DEBUG == 2)
+    #if (DEBUG > 0)
     printf("Adding next %s(%s) ", n2->name, n2->type);
     printf("to %s(%s)\n", n->name, n->type);
     #endif
@@ -37,7 +37,7 @@ void add_son(node* n, node* son){
         return;
     }
 
-    #if (DEBUG == 2)
+    #if (DEBUG > 0)
     printf("Adding son %s(%s) ", son->name, son->type);
     printf("to %s(%s)\n", n->name, n->type);
     #endif

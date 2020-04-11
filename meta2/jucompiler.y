@@ -26,7 +26,7 @@ struct n* tree;
 struct n* aux = NULL;
 
 //For debug purposes
-#if (DEBUG > 0)
+#if (DEBUG == 1)
 int yydebug=1;
 #endif
 

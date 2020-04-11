@@ -6,10 +6,13 @@ rm test/yacc/failed/*.out
 BUILD="bash build.sh"
 
 # Check for any arguments
-while getopts "vo" OPTION; do
+while getopts "vpo" OPTION; do
     case $OPTION in
     v)
         BUILD=$BUILD" -v"
+        ;;
+    p)
+        BUILD=$BUILD" -p"
         ;;
     o)
         BUILD=$BUILD" -o"
