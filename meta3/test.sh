@@ -47,6 +47,7 @@ padlength=50
 
 LEX_ONLY_ERRORS=("errors.java" "InsertionSort.java")
 YACC_ONLY_ERRORS=("assign_error.java" "exemplo_erro.java" "field_decl.java" "string_error.java" "string_error2.java")
+YACC_SEM_ONLY_ERRORS=()
 
 test(){
     # Test every .juc or .java file
@@ -60,11 +61,17 @@ test(){
             else
                 ./jucompiler -l < $filename > output.txt
             fi
-        else
+        elif [ "$1" == "yacc" ]; then
             if [[ " ${YACC_ONLY_ERRORS[@]} " =~ " ${FILE} " ]]; then
                 ./jucompiler -e2 < $filename > output.txt
             else
                 ./jucompiler -t < $filename > output.txt
+            fi
+        else
+            if [[ " ${YACC_SEM_ONLY_ERRORS[@]} " =~ " ${FILE} " ]]; then
+                ./jucompiler -e2 < $filename > output.txt
+            else
+                ./jucompiler -s < $filename > output.txt
             fi
         fi
 
@@ -124,6 +131,30 @@ echo "Starting yacc test..."
 echo ""
 
 test yacc
+
+echo ""
+echo ""
+
+# Print final stats
+echo "PASSED: $PASSED"
+echo "FAILED: $FAILED"
+echo "SKIPPED: $SKIPPED"
+
+PASSED=0
+FAILED=0
+SKIPPED=0
+
+
+######################################
+##         Test semantics           ##
+######################################
+
+echo ""
+echo ""
+echo "Starting semantic analysis test..."
+echo ""
+
+test sem
 
 echo ""
 echo ""
