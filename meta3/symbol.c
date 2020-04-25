@@ -86,7 +86,7 @@ symbol_t* new_var_symbol(const char* name, const char* type, bool param, int lin
 symbol_t* new_function_symbol(node* funcheader){
     node* id = funcheader->son;
     get_id(id->name);
-    type_t type = id->next->name;
+    char* type = id->next->name;
     if (strcmp(id->next->name, "MethodParams") == 0){ // nó type nao esta no funcheader, logo no[1] = params
         return new_symbol(aux, NULL, new_paramtypes(id->next->son), false, true, funcheader->line, funcheader->col);
     } else { // no[2] = params

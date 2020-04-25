@@ -1,3 +1,6 @@
+#ifndef AST_H
+#define AST_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,3 +33,5 @@ int getLine(struct _args* n);
 int getCol(struct _args* n);
 int getLineN(node* n);
 int getColN(node* n);
+
+#endif

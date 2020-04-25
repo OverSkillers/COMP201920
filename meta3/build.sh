@@ -1,7 +1,7 @@
 # Start building commands
 LEX="lex jucompiler.l"
 YACC="yacc -d jucompiler.y"
-CLANG="clang-3.9 -Wall -Wno-unused-function -o jucompiler lex.yy.c y.tab.c ast.c -lm"
+CLANG="clang-3.9 -Wall -Wno-unused-function -o jucompiler lex.yy.c y.tab.c ast.c semantics.c symbol.c -lm"
 
 # Check for any arguments
 while getopts "vpo" OPTION; do

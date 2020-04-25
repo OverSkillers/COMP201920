@@ -1,3 +1,6 @@
+#ifndef SYMBOL_H
+#define SYMBOL_H
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,3 +48,5 @@ paramtypes_t* new_parameter(const char* type);
 paramtypes_t* new_paramtypes(node* paramdecl);
 void insert_symbol(table_t* table, symbol_t* symbol);
 symbol_t* find_symbol(table_t* table, char* name);
+
+#endif

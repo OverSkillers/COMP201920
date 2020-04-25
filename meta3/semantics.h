@@ -1,10 +1,14 @@
+#ifndef SEMANTICS_H
+#define SEMANTICS_H
+
 #include "symbol.h"
+#include "ast.h"
 
 extern struct st* global;
 extern struct st* cur_table;
 extern char aux[1000];
 
-void sem(node* tree);
+table_t* sem(node* tree);
 void check_func_parameters(table_t* table, node* cur_node);
 void check_func_body(table_t* table, node* cur_node);
 bool starts_with(char* start, char* str);
@@ -24,3 +28,5 @@ void check_type(table_t* table, node* cur_node);
 void check_unused_symbols(table_t* table);
 symbol_t* new_vardecl(node* vardecl, bool param);
 symbol_t* new_func_global_symbol(node* funcheader);
+
+#endif

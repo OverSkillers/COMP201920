@@ -5,7 +5,9 @@
     #include <stdio.h>
     #include <string.h>
     #include "y.tab.h"
+    #include "ast.h"
     #include "semantics.h"
+    #include "symbol.h"
 
     //If argument -1 is received, set as 1
     int print_tokens;
@@ -214,6 +216,8 @@ int main(int argc, char **argv)
             yyparse();
             if(erro == 0){
                 if (arvore == 1){
+                    table_t* tables = sem(tree);
+                    print_table(tables);
                     print_tree(0,tree,1);
                     free_tree(tree);
                 }
