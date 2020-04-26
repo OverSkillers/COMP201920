@@ -67,7 +67,7 @@ table_t* new_function_table(const char* name, char* return_type, paramtypes_t* p
 symbol_t* new_symbol(const char* name, const char* type, paramtypes_t* paramtypes, bool param, bool func, int line, int col){
     symbol_t* symbol = (symbol_t *) malloc(sizeof(symbol_t));
     symbol->name = strdup(name);
-    symbol->type = type;
+    strcpy(symbol->type, type);
     symbol->param = param;
     symbol->paramtypes = paramtypes;
     symbol->func = func;
@@ -86,7 +86,9 @@ symbol_t* new_var_symbol(const char* name, const char* type, bool param, int lin
 symbol_t* new_function_symbol(node* funcheader){
     node* id = funcheader->son;
     get_id(id->name);
-    char* type = id->next->name;
+    //TODO: Change this size
+    char* type = malloc(1000);
+    strcpy(type, id->next->name);
     if (strcmp(id->next->name, "MethodParams") == 0){ // nó type nao esta no funcheader, logo no[1] = params
         return new_symbol(aux, NULL, new_paramtypes(id->next->son), false, true, funcheader->line, funcheader->col);
     } else { // no[2] = params
@@ -96,7 +98,7 @@ symbol_t* new_function_symbol(node* funcheader){
 
 paramtypes_t* new_parameter(const char* type){
     paramtypes_t* param = (paramtypes_t *) malloc(sizeof(paramtypes_t));
-    param->type = type;
+    strcpy(param->type, type);
     param->next = NULL;
     return param;
 }

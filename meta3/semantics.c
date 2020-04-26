@@ -69,14 +69,14 @@ void check_return_statement(node* cur_node, char* func_return, char* expr_return
 }
 
 void check_if_for_statement(node* cur_node, char* s, char* expr_type){
-    if (expr_type != "boolean")
+    if (strcmp(expr_type, "boolean") != 0 )
         printf("Line %d, column %d: Incompatible type %s in %s statement\n", cur_node->line, cur_node->col, expr_type, s);
 }
 
 void check_assign_statement(node* cur_node, char* expr1_type, char* expr2_type){
-    if (expr1_type != expr2_type || expr1_type == "Undefined" || expr2_type == "Undefined"){
+    if (expr1_type != expr2_type || strcmp(expr1_type, "Undefined") == 0|| strcmp(expr2_type, "Undefined") == 0){
         printf("Line %d, column %d: Operator = cannot be applied to types %s, %s\n", cur_node->line, cur_node->col, expr1_type, expr2_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     } else {
         cur_node->type = expr1_type;
     }
@@ -84,7 +84,7 @@ void check_assign_statement(node* cur_node, char* expr1_type, char* expr2_type){
 
 void check_call_statement(symbol_t* func, node* cur_node){
     if (func == NULL){
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     } else {
         int len_funcparams = 0; paramtypes_t* p = func->paramtypes;
         while (p != NULL){ len_funcparams++; p = p->next; }
@@ -93,7 +93,7 @@ void check_call_statement(symbol_t* func, node* cur_node){
         if (len_callparams != len_funcparams){
             get_id(cur_node->son->name);
             printf("Line %d, column %d: Cannot find symbol %s\n", cur_node->son->line, cur_node->son->col, aux);
-            cur_node->type = "Undefined";
+            strcpy(cur_node->type, "Undefined");
         } else {
             bool erro;
             p = func->paramtypes; p2 = cur_node->son->next;
@@ -105,73 +105,73 @@ void check_call_statement(symbol_t* func, node* cur_node){
                 p2 = p2->next;
                 p = p->next;
             }
-            if (erro){ cur_node->type = "Undefined"; }
+            if (erro){ strcpy(cur_node->type, "Undefined"); }
             else { cur_node->type = func->type; }
         }
     }
 }
 
 void check_parseargs_statement(node* cur_node, node* expr1, node* expr2){
-    if (expr1->type == "int"){
-        if (expr2->type == "int"){
-            expr1->type = "int";
+    if (strcmp(expr1->type, "int") == 0){
+        if (strcmp(expr2->type, "int") == 0){
+            strcpy(expr1->type, "int");
         } else {
             printf("Line %d, column %d: Incompatible type %s in strconv.Atoi statement\n", expr2->line, expr2->col, expr2->type);
-            cur_node->type = "Undefined";
+            strcpy(cur_node->type, "Undefined");
         }
     } else {
         printf("Line %d, column %d: Incompatible type %s in strconv.Atoi statement\n", expr1->line, expr1->col, expr1->type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     }
 }
 
 void check_binary_expr(node* cur_node, char* s, char* expr1_type, char* expr2_type){
-    if (expr1_type == "int" && expr2_type == "int")
-        cur_node->type = "int";
-    else if (expr1_type == "Double" && expr2_type == "Double")
-        cur_node->type = "Double";
+    if (strcmp(expr1_type, "int") == 0 && strcmp(expr2_type, "int") == 0)
+        strcpy(cur_node->type, "int");
+    else if (strcmp(expr1_type, "Double") == 0 && strcmp(expr2_type, "Double") == 0)
+        strcpy(cur_node->type, "Double");
     else {
         printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n",
         cur_node->line, cur_node->col, s, expr1_type, expr2_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     }
 }
 
 void check_plus_minus_expr(node* cur_node, char* s, char* expr_type){
-    if (expr_type != "int" && expr_type != "Double"){
+    if (strcmp(expr_type, "int") != 0 && strcmp(expr_type, "Double") != 0 ){
         printf("Line %d, column %d: Operator %s cannot be applied to type %s\n", cur_node->line, cur_node->col, s, expr_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     } else {
         cur_node->type = expr_type;
     }
 }
 
 void check_not_expr(node* cur_node, char* expr_type){
-    if (expr_type == "boolean"){
-        cur_node->type = "boolean";
+    if (strcmp(expr_type, "boolean") == 0){
+        strcpy(cur_node->type, "boolean");
     } else {
         printf("Line %d, column %d: Operator ! cannot be applied to type %s\n", cur_node->line, cur_node->col, expr_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     }
 }
 
 void check_logical_expr(node* cur_node, char* s, char* expr1_type, char* expr2_type){
-    if (expr1_type == "boolean" && expr2_type == "boolean") {
-        cur_node->type = "boolean";
+    if (strcmp(expr1_type, "boolean") == 0 && strcmp(expr2_type, "boolean") == 0) {
+        strcpy(cur_node->type, "boolean");
     } else {
         printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n",
         cur_node->line, cur_node->col, s, expr1_type, expr2_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     }
 }
 
 void check_comp_expr(node* cur_node, char* s, char* expr1_type, char* expr2_type){
     if (expr1_type == expr2_type){
-        cur_node->type = "boolean";
+        strcpy(cur_node->type, "boolean");
     } else {
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
         printf("Line %d, column %d: Operator %s cannot be applied to types %s, %s\n", cur_node->line, cur_node->col, s, expr1_type, expr2_type);
-        cur_node->type = "Undefined";
+        strcpy(cur_node->type, "Undefined");
     }
 }
 
@@ -252,18 +252,18 @@ void check_type(table_t* table, node* cur_node){
             s->used = true;
         } else {
             printf("Line %d, column %d: Cannot find symbol %s\n", cur_node->line, cur_node->col, aux);
-            cur_node->type = "Undefined";
+            strcpy(cur_node->type, "Undefined");
         }
     } else if (starts_with("IntLit", cur_node->name)){
         if (check_int(cur_node)) {
-            cur_node->type = "int";
+            strcpy(cur_node->type, "int");
         } else {
-            cur_node->type = "Undefined";
+            strcpy(cur_node->type, "Undefined");
         }
     } else if (starts_with("RealLit", cur_node->name)){
-        cur_node->type = "Double";
+        strcpy(cur_node->type, "Double");
     } else if (starts_with("StrLit", cur_node->name)){
-        cur_node->type = "String";
+        strcpy(cur_node->type, "String");
     }
 }
 
