@@ -216,7 +216,7 @@ int main(int argc, char **argv)
             yyparse();
             if(erro == 0){
                 if (arvore == 1){
-                    table_t* tables = sem(tree);
+                    table_t* tables = sem(tree,tree->son);
                     print_table(tables);
                     print_tree(0,tree,1);
                     free_tree(tree);
