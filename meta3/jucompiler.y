@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "y.tab.h"
+#include "ast.h"
 #include "symbol.h"
 
 extern int yylineno,coluna,yyleng;
@@ -23,7 +24,7 @@ int erroField = 0;
 struct n* tree;
 
 //For debug purposes
-#if (DEBUG > 0)
+#if (DEBUG == 1)
 int yydebug=1;
 #endif
 
