@@ -8,6 +8,7 @@ node* create_node(const char* name,const char* type,int line,int col){
     n->line = line;
     n->col = col;
     n->param = 0;
+	n->annotation = NULL;
 	return n;
 }
 
@@ -53,12 +54,15 @@ void print_tree(int level, node* n,int abs){
 	for (int i = 0; i < level; i++) printf("..");
 	if(abs == 0){
 		if(strcmp(n->type,"NULL")==0){
-			printf("%s\n", n->name);
+			printf("%s", n->name);
 		}else if(strcmp(n->name,"StrLit")==0){
-			printf("%s(\"%s\")\n",n->name,n->type);
+			printf("%s(\"%s\")",n->name,n->type);
 		}else{
-			printf("%s(%s)\n",n->name,n->type);
+			printf("%s(%s)",n->name,n->type);
 		}
+		
+		if (n->annotation != NULL) printf(" - %s", n->annotation);
+		printf("\n");
 	}
 	print_tree(level + 1, n->son,abs);
 	print_tree(level, n->next,abs);

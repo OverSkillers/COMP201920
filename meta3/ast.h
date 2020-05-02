@@ -15,6 +15,7 @@ struct _args{
 typedef struct n{
 	char *name;
 	char *type;
+    char *annotation;
 	struct n* son;
 	struct n* next;
     int line;

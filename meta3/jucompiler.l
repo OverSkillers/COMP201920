@@ -216,9 +216,9 @@ int main(int argc, char **argv)
             yyparse();
             if(erro == 0){
                 if (arvore == 1){
-                    table_t* tables = sem(tree,tree->son);
+                    table_t* tables = sem(tree, tree->son);
                     print_table(tables);
-                    print_tree(0,tree,1);
+                    print_tree(0,tree,0);
                     free_tree(tree);
                 }
             }

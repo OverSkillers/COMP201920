@@ -7,6 +7,12 @@
 #include <string.h>
 #include "ast.h"
 
+#define GLOBAL_TABLE_TYPE "Class"
+#define METHOD_TABLE_TYPE "Method"
+#define MAX_SYMBOL_NAME_LEN 200
+#define MAX_SYMBOL_TYPE_LEN 200
+#define MAX_PARAM_TYPE_LEN 300
+
 struct st;
 struct sym;
 struct pt;
@@ -16,10 +22,12 @@ char aux[1000];
 
 typedef struct st {
     char* name;
+    char* type;
+    char* return_type;
+    struct pt* paramtypes;
     struct sym* first;
     struct sym* last;
     struct st* next;
-    node* begin;
 } table_t;
 
 typedef struct sym {
@@ -38,10 +46,12 @@ typedef struct pt {
     struct pt* next;
 } paramtypes_t;
 
-void get_id(const char* id);
-void print_table(table_t* table);
-table_t* new_table(const char* name,node* begin);
-void insert_symbol(table_t* table, symbol_t* symbol);
-symbol_t* find_symbol(table_t* table, char* name);
+void get_id(const char*);
+void print_table(table_t*);
+void print_params_str(table_t*);
+table_t* new_table(const char*, const char*, const char*);
+symbol_t* create_symbol(node*, bool, bool, paramtypes_t*);
+void insert_symbol(table_t*, symbol_t*);
+symbol_t* find_symbol(table_t*, char*);
 
 #endif

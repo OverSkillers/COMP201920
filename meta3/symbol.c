@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "symbol.h"
 
 void get_id(const char* id){
@@ -8,11 +9,26 @@ void get_id(const char* id){
 
 void print_table(table_t* table){
     if (table == NULL) return;
-    printf("===== %s %s Symbol Table =====\n", table->name,table->begin->type);
+    /*Check if parameter type printing is needed*/
+    if (strcmp(table->type, GLOBAL_TABLE_TYPE) != 0){
+        printf("===== %s %s(", table->type, table->name);
+        print_params_str(table);
+        printf(") Symbol Table =====\n");
+    }
+    else printf("===== %s %s Symbol Table =====\n", table->type, table->name);
+
+    /*Print return type if it exists*/
+    if (table->return_type != NULL){
+        /*Convert the type to lower case*/
+        char* str = table->return_type;
+        for ( ; *str; ++str) *str = tolower(*str);
+        printf("return\t%s\n", table->return_type);
+    }
+
     symbol_t* s = table->first;
     while (s != NULL){
         printf("%s\t", s->name);
-        if (strcmp(table->name, "Class") == 0){
+        if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
             if (s->func) printf("(");
             if (s->paramtypes != NULL){
                 printf("%s", s->paramtypes->type);
@@ -34,14 +50,50 @@ void print_table(table_t* table){
     print_table(table->next);
 }
 
-table_t* new_table(const char* name,node* begin){
+void print_params_str(table_t* table){
+    paramtypes_t* params = table->paramtypes;
+    while (params){
+        printf("%s", params->type);
+        params = params->next;
+    }
+}
+
+table_t* new_table(const char* name, const char* type, const char* return_type){
     table_t* table = (table_t *) malloc(sizeof(table_t));
+    // TODO: free this memory
     table->name = strdup(name);
     table->first = NULL;
     table->last = NULL;
     table->next = NULL;
-    table->begin = begin;
+    // TODO: free this memory
+    table->type = strdup(type);
+    // TODO: free this memory
+    if (return_type) table->return_type = strdup(return_type);
     return table;
+}
+
+symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt){
+    symbol_t* symbol = malloc(sizeof(struct sym));
+    symbol->next = NULL;
+    symbol->col = src->col;
+    symbol->line = src->line;
+    // TODO: Free this memory
+    symbol->name = malloc(MAX_SYMBOL_NAME_LEN);
+    strcpy(symbol->name, src->son->next->type);
+    symbol->func = is_func;
+    symbol->param = is_param;
+    // TODO: Free this memory
+    symbol->type = malloc(MAX_SYMBOL_TYPE_LEN);
+
+    /*Convert the type to lower case*/
+    char* str = src->son->name;
+    for ( ; *str; ++str) *str = tolower(*str);
+    
+    if (strcmp(src->son->name, "stringarray") == 0)
+        strcpy(symbol->type, "String[]");
+    else strcpy(symbol->type, src->son->name);
+    symbol->paramtypes = pt;
+    return symbol;
 }
 
 void insert_symbol(table_t* table, symbol_t* symbol){
@@ -53,7 +105,8 @@ void insert_symbol(table_t* table, symbol_t* symbol){
             table->last->next = symbol;
             table->last = symbol;
         } else {
-            printf("Line %d, column %d: Symbol %s already defined\n", symbol->line, symbol->col, symbol->name);
+            printf("Line %d, column %d: Symbol %s already defined\n", 
+                symbol->line, symbol->col, symbol->name);
         }
     }
 }
@@ -66,6 +119,6 @@ symbol_t* find_symbol(table_t* table, char* name){
         }
         s = s->next;
     }
-    if (strcmp(table->name, "Global") == 0) return NULL;
+    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0) return NULL;
     else return find_symbol(global, name);
 }
