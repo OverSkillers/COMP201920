@@ -64,8 +64,8 @@ void print_tree(int level, node* n,int abs){
 		if (n->annotation != NULL) printf(" - %s", n->annotation);
 		printf("\n");
 	}
-	print_tree(level + 1, n->son,abs);
-	print_tree(level, n->next,abs);
+	print_tree(level + 1, n->son, abs);
+	print_tree(level, n->next, abs);
 }
 
 void free_tree(node* n){
