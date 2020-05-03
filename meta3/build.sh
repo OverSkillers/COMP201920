@@ -28,7 +28,7 @@ if $LEX; then
         # Compile using clang, checking for build success
         if $CLANG; then
             # Zip the lex file if build successful
-            zip jucompiler.zip jucompiler.l jucompiler.y ast.c ast.h structures.h
+            zip jucompiler.zip jucompiler.* ast.* symbol.* semantics.* structures.h
         else
             exit
         fi
