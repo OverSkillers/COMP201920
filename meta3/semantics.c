@@ -3,6 +3,8 @@
 
 #define FUNC_DECL "MethodDecl"
 #define FIELD_DECL "FieldDecl"
+#define VAR_DECL "VarDecl"
+#define IF_STMT "If"
 
 table_t* sem(node* tree, node* begin){
     global = new_table(tree->son->type, GLOBAL_TABLE_TYPE, NULL);
@@ -26,7 +28,7 @@ table_t* sem(node* tree, node* begin){
 }
 
 
-table_t* check_func_decl(table_t* current_table, table_t* last_table, node* func_decl){
+table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_decl){
     // TODO: Check if method already exists
     /*Create param types*/
     paramtypes_t* params = NULL;
@@ -47,14 +49,15 @@ table_t* check_func_decl(table_t* current_table, table_t* last_table, node* func
         else current->next = new_params;
 
         /*Convert the type to lower case*/
-        char* str = param_decl->son->name;
-        for ( ; *str; ++str) *str = tolower(*str);
+        char* str = strdup(param_decl->son->name);
+        *str = tolower(*str);
 
         // TODO: Free this memory
-        if (strcmp(param_decl->son->name, "stringarray") == 0)
+        if (strcmp(str, "stringArray") == 0)
             new_params->type = strdup("String[]");
-        else new_params->type = strdup(param_decl->son->name);
+        else new_params->type = strdup(str);
         new_params->next = NULL;
+        free(str);
 
         /*Insert param symbols into new table*/
         insert_symbol(new_symbol_table, create_symbol(param_decl, false, true, NULL));
@@ -65,21 +68,37 @@ table_t* check_func_decl(table_t* current_table, table_t* last_table, node* func
     new_symbol_table->paramtypes = params;
 
     /*Insert param types into global symbol table*/
-    insert_symbol(current_table, create_symbol(func_decl->son, true, false, params));
+    insert_symbol(global_table, create_symbol(func_decl->son, true, false, params));
 
     node* method_body = func_decl->son->next;
-    check_method_body(current_table, method_body);
+    check_method_body(global_table, new_symbol_table, method_body);
 
     return new_symbol_table;
 }
 
-void check_field_decl(table_t* global, node* field_decl){
+void check_field_decl(table_t* global_table, node* field_decl){
     /**/
     if (field_decl->son && field_decl->son->next){
-        insert_symbol(global, create_symbol(field_decl, false, false, NULL));
+        insert_symbol(global_table, create_symbol(field_decl, false, false, NULL));
     }
 }
 
-void check_method_body(table_t* table, node* method_body){
+void check_method_body(table_t* global_table, table_t* method_table, node* method_body){
+    node* temp = method_body->son;
+
+    while(temp){
+        if (strcmp(VAR_DECL, temp->name) == 0){
+            insert_symbol(method_table, create_symbol(temp, false, false, NULL));
+        }
+
+        else if (strcmp(IF_STMT, temp->name) == 0){
+            check_if_stmt(global_table, method_table, temp);
+        }
+
+        temp = temp->next;
+    }
+}
+
+void check_if_stmt(table_t* global_table, table_t* method_table, node* if_node){
 
 }

@@ -20,9 +20,10 @@ void print_table(table_t* table){
     /*Print return type if it exists*/
     if (table->return_type != NULL){
         /*Convert the type to lower case*/
-        char* str = table->return_type;
-        for ( ; *str; ++str) *str = tolower(*str);
-        printf("return\t%s\n", table->return_type);
+        char* str = strdup(table->return_type);
+        *str = tolower(*str);
+        printf("return\t\t%s\n", str);
+        free(str);
     }
 
     symbol_t* s = table->first;
@@ -55,6 +56,7 @@ void print_params_str(table_t* table){
     while (params){
         printf("%s", params->type);
         params = params->next;
+        if (params) printf(",");
     }
 }
 
@@ -86,13 +88,15 @@ symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt
     symbol->type = malloc(MAX_SYMBOL_TYPE_LEN);
 
     /*Convert the type to lower case*/
-    char* str = src->son->name;
-    for ( ; *str; ++str) *str = tolower(*str);
-    
-    if (strcmp(src->son->name, "stringarray") == 0)
+    char* str = strdup(src->son->name);
+    *str = tolower(*str);
+
+    if (strcmp(str, "stringArray") == 0)
         strcpy(symbol->type, "String[]");
-    else strcpy(symbol->type, src->son->name);
+    else strcpy(symbol->type, str);
     symbol->paramtypes = pt;
+
+    free(str);
     return symbol;
 }
 
