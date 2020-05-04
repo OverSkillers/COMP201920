@@ -12,7 +12,7 @@ void print_table(table_t* table){
     /*Check if parameter type printing is needed*/
     if (strcmp(table->type, GLOBAL_TABLE_TYPE) != 0){
         printf("===== %s %s(", table->type, table->name);
-        print_params_str(table);
+        print_params_str(table->paramtypes, false, NULL);
         printf(") Symbol Table =====\n");
     }
     else printf("===== %s %s Symbol Table =====\n", table->type, table->name);
@@ -51,12 +51,15 @@ void print_table(table_t* table){
     print_table(table->next);
 }
 
-void print_params_str(table_t* table){
-    paramtypes_t* params = table->paramtypes;
+void print_params_str(paramtypes_t* params, bool to_string, char* str){
     while (params){
-        printf("%s", params->type);
+        if (to_string) sprintf(str + strlen(str), "%s", params->type);
+        else printf("%s", params->type);
         params = params->next;
-        if (params) printf(",");
+        if (params){
+            if (to_string) sprintf(str + strlen(str), ",");
+            else printf(",");
+        }
     }
 }
 
@@ -93,6 +96,8 @@ symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt
 
     if (strcmp(str, "stringArray") == 0)
         strcpy(symbol->type, "String[]");
+    else if (strcmp(str, "bool") == 0)
+        strcpy(symbol->type, "boolean");
     else strcpy(symbol->type, str);
     symbol->paramtypes = pt;
 
@@ -105,7 +110,11 @@ void insert_symbol(table_t* table, symbol_t* symbol){
         table->first = symbol;
         table->last = symbol;
     } else {
-        if (find_symbol(table, symbol->name) == NULL){
+        symbol_t* found;
+        if (symbol->func) found = find_method(table, symbol->name, symbol->paramtypes);
+        else found = find_symbol(table, symbol->name);
+
+        if (found == NULL){
             table->last->next = symbol;
             table->last = symbol;
         } else {
@@ -120,6 +129,33 @@ symbol_t* find_symbol(table_t* table, char* name){
     while (s != NULL){
         if (strcmp(s->name, name) == 0){
             return s;
+        }
+        s = s->next;
+    }
+    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0) return NULL;
+    else return find_symbol(global, name);
+}
+
+symbol_t* find_method(table_t* table, char* name, paramtypes_t* params){
+    symbol_t* s = table->first;
+    while (s != NULL){
+        if (strcmp(s->name, name) == 0){
+            /*Check the arguments*/
+            bool correct = true;
+            paramtypes_t* temp_params = s->paramtypes;
+            while(temp_params && params){
+                if (strcmp(temp_params->type, params->type) != 0){
+                    correct = false;
+                    break;
+                }
+
+                temp_params = temp_params->next;
+                params = params->next;
+            }
+
+            if (temp_params || params) correct = false;
+
+            if (correct) return s;
         }
         s = s->next;
     }

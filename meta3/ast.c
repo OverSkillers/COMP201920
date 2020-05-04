@@ -1,15 +1,23 @@
 #include "ast.h"
 
-node* create_node(const char* name,const char* type,int line,int col){
+node* create_node(const char* name,const char* type, int line,int col){
 	//printf("Creating node %s\n", name);
 	node* n = (node *) malloc(sizeof(node));
+	// TODO: Free this memory
 	n->name = strdup(name);
+	// TODO: Free this memory
 	n->type = strdup(type);
     n->line = line;
     n->col = col;
     n->param = 0;
+	// TODO: Free this memory
 	n->annotation = NULL;
 	return n;
+}
+
+void set_annotation(node* dest, const char* annotation){
+	/*TODO: Free this memory*/
+	dest->annotation = strdup(annotation);
 }
 
 void add_next(node* n, node* n2){

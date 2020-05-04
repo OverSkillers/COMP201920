@@ -24,7 +24,8 @@ typedef struct n{
     struct n* prev;
 } node;
 
-node* create_node(const char* name,const char* type,int line, int col);
+node* create_node(const char* name,const char* type, int line, int col);
+void set_annotation(node*, const char*);
 void add_next(node* n, node* n2);
 void add_son(node* n, node* son);
 bool is_block(node* n);

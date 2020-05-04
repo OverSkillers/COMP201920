@@ -48,10 +48,11 @@ typedef struct pt {
 
 void get_id(const char*);
 void print_table(table_t*);
-void print_params_str(table_t*);
+void print_params_str(paramtypes_t*, bool, char*);
 table_t* new_table(const char*, const char*, const char*);
 symbol_t* create_symbol(node*, bool, bool, paramtypes_t*);
 void insert_symbol(table_t*, symbol_t*);
 symbol_t* find_symbol(table_t*, char*);
+symbol_t* find_method(table_t*, char*, paramtypes_t*);
 
 #endif
