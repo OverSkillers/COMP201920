@@ -105,7 +105,11 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
 }
 
 void check_if_stmt(table_t* global_table, table_t* method_table, node* if_node){
-
+    if(if_node->annotation != NULL){
+        if(strcmp(if_node->annotation,"boolean")!=0){
+            printf("Line %d, col %d: Incompatible type %s in if  statement\n", if_node->line, if_node->col, if_node->annotation);
+        }
+    }
 }
 
 void check_call(table_t* global_table, table_t* method_table, node* call_node){
