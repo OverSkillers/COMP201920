@@ -68,10 +68,20 @@ void print_tree(int level, node* n,int abs){
 		}else{
 			printf("%s(%s)",n->name,n->type);
 		}
+		printf("\n");
+	}
+    if(abs == 1){
+        if(strcmp(n->type,"NULL")==0){
+			printf("%s", n->name);
+		}else if(strcmp(n->name,"StrLit")==0){
+			printf("%s(\"%s\")",n->name,n->type);
+		}else{
+			printf("%s(%s)",n->name,n->type);
+		}
 		
 		if (n->annotation != NULL) printf(" - %s", n->annotation);
 		printf("\n");
-	}
+    }
 	print_tree(level + 1, n->son, abs);
 	print_tree(level, n->next, abs);
 }

@@ -218,7 +218,7 @@ int main(int argc, char **argv)
                 if (arvore == 1){
                     table_t* tables = sem(tree, tree->son);
                     print_table(tables);
-                    print_tree(0,tree,0);
+                    print_tree(0,tree,1);
                     free_tree(tree);
                 }
             }
