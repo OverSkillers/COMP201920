@@ -17,7 +17,9 @@ node* create_node(const char* name,const char* type, int line,int col){
 
 void set_annotation(node* dest, const char* annotation){
 	/*TODO: Free this memory*/
-	dest->annotation = strdup(annotation);
+	if (annotation){
+		dest->annotation = strdup(annotation);
+	}
 }
 
 void add_next(node* n, node* n2){

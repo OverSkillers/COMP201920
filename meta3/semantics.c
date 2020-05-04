@@ -120,13 +120,20 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
     /*Check arguments*/
     node* arguments = call_node->son->next;
     while(arguments){
-        if (is_expr(arguments)) check_expression(global_table, method_table, arguments);
-        else if (is_assignment(arguments)) check_assignment(global_table, method_table, arguments);
+        if (is_expr(arguments)) 
+            check_expression(global_table, method_table, arguments);
+
+        else if (is_assignment(arguments)) 
+            check_assignment(global_table, method_table, arguments);
+
         else if (strcmp(arguments->name, "Id") == 0){
             symbol_t* symbol = find_symbol(method_table, arguments->type);
             if (symbol == NULL) arguments->annotation = strdup("undef");
             else arguments->annotation = strdup(symbol->type);
         }
+
+        else if (strcmp(arguments->name, "Call") == 0) 
+            check_call(global_table, method_table, arguments);
 
         // TODO: Free this memory
         paramtypes_t* new_params = malloc(sizeof(struct pt));
