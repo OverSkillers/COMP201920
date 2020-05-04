@@ -118,7 +118,7 @@ void insert_symbol(table_t* table, symbol_t* symbol){
             table->last->next = symbol;
             table->last = symbol;
         } else {
-            printf("Line %d, column %d: Symbol %s already defined\n", 
+            printf("Line %d, col %d: Symbol %s already defined\n", 
                 symbol->line, symbol->col, symbol->name);
         }
     }
