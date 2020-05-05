@@ -134,11 +134,11 @@ void check_if(table_t* global_table, table_t* method_table, node* if_node){
     /*Semantically check the if statement, only boolean accepted in condition*/
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
-            printf("Line %d, col %d: Incompatible type %s in if  statement\n", 
+            printf("Line %d, col %d: Incompatible type %s in if statement\n", 
                     if_node->line, if_node->col, if_node->annotation);
         }
     }
-    else printf("Line %d, col %d: Incompatible type %s in if  statement\n", 
+    else printf("Line %d, col %d: Incompatible type %s in if statement\n", 
                     if_node->line, if_node->col, "undef");
 }
 
@@ -378,12 +378,14 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
 }
 
 void check_while(table_t* global_table, table_t* method_table, node* while_node){
-    /*Check left node*/
-    node* left = while_node->son->next;
+    /*Check child node*/
+    node* child = while_node->son->next;
     /*If left node has no annotation, check it as well*/
-    if (!left->annotation){
-        if (is_block_node(left)) check_block(global_table, method_table, left);
-        else if (is_statement(left)) check_statement(global_table, method_table, left);
+    if (!child->annotation){
+        if (is_block_node(child)) 
+            check_block(global_table, method_table, child);
+        else if (is_statement(child)) 
+            check_statement(global_table, method_table, child);
     }
 
     /*Check condition*/
@@ -396,13 +398,13 @@ void check_while(table_t* global_table, table_t* method_table, node* while_node)
             check_assignment(global_table, method_table, condition);
     }
 
-    /*Semantically check the if statement, only boolean accepted in condition*/
+    /*Semantically check the while statement, only boolean accepted in condition*/
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
-            printf("Line %d, col %d: Incompatible type %s in if  statement\n",while_node->line, while_node->col, while_node->annotation);
+            printf("Line %d, col %d: Incompatible type %s in while statement\n", while_node->line, while_node->col, while_node->annotation);
         }
     }
-    else printf("Line %d, col %d: Incompatible type %s in if  statement\n",while_node->line, while_node->col, "undef");
+    else printf("Line %d, col %d: Incompatible type %s in while statement\n", while_node->line, while_node->col, "undef");
 
 }
 
