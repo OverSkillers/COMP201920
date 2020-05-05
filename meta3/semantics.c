@@ -257,9 +257,17 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
                 if (strcmp(left->annotation, "int") != 0
                     && strcmp(left->annotation, "double") != 0)
                     {
-                        // TODO: Print error
+                        if (strcmp(expr->name, "Plus") == 0){
+                            // TODO: Print error
+                        printf("Line %d, col %d: Operator + cannot be applied to type %s",expr->line, expr->col, expr->annotation);
+                        }
+
+                        if (strcmp(expr->name, "Minus") == 0){
+                            // TODO: Print error
+                        printf("Line %d, col %d: Operator - cannot be applied to type %s",expr->line, expr->col, expr->annotation);
+                        }
                         expr->annotation = strdup("undef");
-                    }
+            }
                 else expr->annotation = strdup(left->annotation);
             }
 
@@ -267,6 +275,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
             /*Only boolean type is accepted*/
             if (strcmp(left->annotation, "boolean") != 0){
                 // TODO: Print error
+                        printf("Line %d, col %d: Operator ! cannot be applied to type %s",expr->line, expr->col, expr->annotation);
                         expr->annotation = strdup("undef");
             }
             else expr->annotation = strdup(left->annotation);
@@ -308,6 +317,7 @@ void annotate_expression(node* left, node* right, node* expr){
                 && strcmp(right->annotation, "double") != 0))
                 {
                     // TODO: Print error
+                    printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
                     expr->annotation = strdup("undef");
                 }
 
@@ -340,6 +350,7 @@ void annotate_expression(node* left, node* right, node* expr){
                     || strcmp(right->annotation, "boolean") != 0)
                     {
                         // TODO: Print error
+                        printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
                         expr->annotation = strdup("undef");
                     }
 
@@ -354,6 +365,7 @@ void annotate_expression(node* left, node* right, node* expr){
                     || strcmp(right->annotation, "int") == 0)
                     {
                         // TODO: Print error
+                        printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
                         expr->annotation = strdup("undef");
                     }
 
