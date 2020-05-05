@@ -113,14 +113,6 @@ void check_if(table_t* global_table, table_t* method_table, node* if_node){
         else if (is_statement(left)) check_statement(global_table, method_table, left);
     }
 
-    /*Check right node*/
-    node* right = if_node->son->next->next;
-    /*If right node has no annotation, check it as well*/
-    if (!right->annotation){
-        if (is_block_node(right)) check_block(global_table, method_table, right);
-        else if (is_statement(right)) check_statement(global_table, method_table, right);
-    }
-
     /*Check condition*/
     node* condition = if_node->son;
     /*If condition has no annotation, check it as well*/
