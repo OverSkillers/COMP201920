@@ -88,7 +88,7 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
             insert_symbol(method_table, create_symbol(temp, false, false, NULL));
         }
         else if (strcmp(IF_STMT, temp->name) == 0){
-            check_if_stmt(global_table, method_table, temp);
+            check_if(global_table, method_table, temp);
         }
         else if(strcmp(CALL, temp->name) == 0){
             check_call(global_table, method_table, temp);
@@ -104,12 +104,42 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
     }
 }
 
-void check_if_stmt(table_t* global_table, table_t* method_table, node* if_node){
-    if(if_node->annotation != NULL){
-        if(strcmp(if_node->annotation,"boolean")!=0){
-            printf("Line %d, col %d: Incompatible type %s in if  statement\n", if_node->line, if_node->col, if_node->annotation);
+void check_if(table_t* global_table, table_t* method_table, node* if_node){
+    /*Check left node*/
+    node* left = if_node->son->next;
+    /*If left node has no annotation, check it as well*/
+    if (!left->annotation){
+        if (is_block_node(left)) check_block(global_table, method_table, left);
+        else if (is_statement(left)) check_statement(global_table, method_table, left);
+    }
+
+    /*Check right node*/
+    node* right = if_node->son->next->next;
+    /*If right node has no annotation, check it as well*/
+    if (!right->annotation){
+        if (is_block_node(right)) check_block(global_table, method_table, right);
+        else if (is_statement(right)) check_statement(global_table, method_table, right);
+    }
+
+    /*Check condition*/
+    node* condition = if_node->son;
+    /*If condition has no annotation, check it as well*/
+    if (!condition->annotation){
+        if (is_expr(condition)) 
+            check_expression(global_table, method_table, condition);
+        else if (is_assignment(condition))
+            check_assignment(global_table, method_table, condition);
+    }
+
+    /*Semantically check the if statement, only boolean accepted in condition*/
+    if (condition->annotation){
+        if (strcmp(condition->annotation, "boolean") != 0){
+            printf("Line %d, col %d: Incompatible type %s in if  statement\n", 
+                    if_node->line, if_node->col, if_node->annotation);
         }
     }
+    else printf("Line %d, col %d: Incompatible type %s in if  statement\n", 
+                    if_node->line, if_node->col, "undef");
 }
 
 void check_call(table_t* global_table, table_t* method_table, node* call_node){
@@ -176,8 +206,10 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
     /*If left child has no annotation, check it as well*/
     node* left = expr->son;
     if (!left->annotation){
-        if (is_expr(left)) check_expression(global_table, method_table, left);
-        else if (is_assignment(left)) check_assignment(global_table, method_table, left);
+        if (is_expr(left)) 
+            check_expression(global_table, method_table, left);
+        else if (is_assignment(left)) 
+            check_assignment(global_table, method_table, left);
         else if (strcmp(left->name, "Id") == 0){
             symbol_t* symbol = find_symbol(method_table, left->type);
             if (!symbol) left->annotation = strdup("undef");
@@ -188,8 +220,10 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
     /*If right child exists and has no annotation, check it as well*/
     node* right = expr->son->next;
     if (right && !right->annotation){
-        if (is_expr(right)) check_expression(global_table, method_table, right);
-        else if (is_assignment(right)) check_assignment(global_table, method_table, right);
+        if (is_expr(right)) 
+            check_expression(global_table, method_table, right);
+        else if (is_assignment(right)) 
+            check_assignment(global_table, method_table, right);
     }
 
     /*If only one child, check for valid expression (plus, minus and not)*/
@@ -217,7 +251,20 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         }
     }
     else{
-        /*Check if expression is valid (and annotate it)*/
+        /*If right child has no annotation, check it as well*/
+        if (!right->annotation){
+            if (is_expr(right)) 
+                check_expression(global_table, method_table, right);
+            else if (is_assignment(right)) 
+                check_assignment(global_table, method_table, right);
+            else if (strcmp(right->name, "Id") == 0){
+                symbol_t* symbol = find_symbol(method_table, right->type);
+                if (!symbol) right->annotation = strdup("undef");
+                else right->annotation = strdup(symbol->type);
+            }
+        }
+
+        /*Check if this expression is valid (and annotate it)*/
         annotate_expression(left, right, expr);
     }
 }
@@ -294,6 +341,38 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
 
 }
 
+void check_block(table_t* global_table, table_t* method_table, node* stmt){
+    node* temp = stmt->son;
+    /*Travel through all the block's statements*/
+    while(temp){
+        check_statement(global_table, method_table, temp);
+        temp = temp->next;
+    }
+}
+
+void check_statement(table_t* global_table, table_t* method_table, node* stmt){
+    if (is_expr(stmt)) check_expression(global_table, method_table, stmt);
+    else if (is_assignment(stmt)) check_assignment(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "Call") == 0) check_call(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "Return") == 0) check_return(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "If") == 0) check_if(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "While") == 0) check_while(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "ParseArgs") == 0)
+        check_parse_args(global_table, method_table, stmt);
+}
+
+void check_return(table_t* global_table, table_t* method_table, node* return_node){
+
+}
+
+void check_while(table_t* global_table, table_t* method_table, node* while_node){
+
+}
+
+void check_parse_args(table_t* global_table, table_t* method_table, node* parse_args){
+
+}
+
 bool is_expr(node* src){
     return strcmp(src->name, "Sub") == 0
            || strcmp(src->name, "Mul") == 0
@@ -318,4 +397,18 @@ bool is_expr(node* src){
 
 bool is_assignment(node* src){
     return strcmp(src->name, "Assign") == 0;
+}
+
+bool is_block_node(node* src){
+    return strcmp(src->name, "Block") == 0;
+}
+
+bool is_statement(node* src){
+    return strcmp(src->name, "If") == 0
+           || strcmp(src->name, "While") == 0
+           || strcmp(src->name, "Return") == 0
+           || strcmp(src->name, "Print") == 0
+           || strcmp(src->name, "Assign") == 0
+           || strcmp(src->name, "Call") == 0
+           || strcmp(src->name, "ParseArgs") == 0;
 }
