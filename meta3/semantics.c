@@ -362,7 +362,19 @@ void check_statement(table_t* global_table, table_t* method_table, node* stmt){
 }
 
 void check_return(table_t* global_table, table_t* method_table, node* return_node){
+    /*Check child if not annotated yet*/
+    node* child = return_node->son;
+    if (child && !child->annotation){
+        if (is_expr(child)) check_expression(global_table, method_table, child);
+        else if (is_assignment(child)) check_assignment(global_table, method_table, child);
+    }
 
+    /*Check if child annotation matches with method return type*/
+    if (child){
+        if (strcmp(child->annotation, method_table->return_type) != 0){
+            // TODO: Print error
+        }
+    }
 }
 
 void check_while(table_t* global_table, table_t* method_table, node* while_node){
