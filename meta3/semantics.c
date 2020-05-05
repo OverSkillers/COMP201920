@@ -32,10 +32,18 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     node* param_decl = method_params->son;
 
     /*Create new symbol table for new method*/
+    char *type_str = strdup(func_decl->son->son->name);
+    *type_str = tolower(*type_str);
+    if (strcmp(type_str, "stringArray") == 0)
+        strcpy(type_str, "String[]");
+    else if (strcmp(type_str, "bool") == 0)
+        strcpy(type_str, "boolean");
+
     table_t* new_symbol_table = new_table(func_decl->son->son->next->type,
                                         METHOD_TABLE_TYPE,
-                                        func_decl->son->son->name);
+                                        type_str);
     last_table->next = new_symbol_table;
+    free(type_str);
 
     while(param_decl){
         // TODO: Free this memory
@@ -90,7 +98,7 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
         else if (strcmp(IF_STMT, temp->name) == 0){
             check_if(global_table, method_table, temp);
         }
-        else if(strcmp(CALL, temp->name) == 0){
+        else if(strcmp(CALL_STMT, temp->name) == 0){
             check_call(global_table, method_table, temp);
         }
         else if (is_expr(temp)){
@@ -98,6 +106,18 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
         }
         else if (is_assignment(temp)){
             check_assignment(global_table, method_table, temp);
+        }
+        else if (strcmp(RETURN_STMT, temp->name) == 0){
+            check_return(global_table, method_table, temp);
+        }
+        else if (strcmp(WHILE_STMT, temp->name) == 0){
+            check_while(global_table, method_table, temp);
+        }
+        else if (strcmp(PARSEARGS_STMT, temp->name) == 0){
+            check_parse_args(global_table, method_table, temp);
+        }
+        else if (strcmp(PRINT_STMT, temp->name) == 0){
+            check_print(global_table, method_table, temp);
         }
 
         temp = temp->next;
@@ -156,12 +176,6 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
         else if (is_assignment(arguments)) 
             check_assignment(global_table, method_table, arguments);
 
-        else if (strcmp(arguments->name, "Id") == 0){
-            symbol_t* symbol = find_symbol(method_table, arguments->type);
-            if (symbol == NULL) arguments->annotation = strdup("undef");
-            else arguments->annotation = strdup(symbol->type);
-        }
-
         else if (strcmp(arguments->name, "Call") == 0) 
             check_call(global_table, method_table, arguments);
 
@@ -203,6 +217,14 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
 }
 
 void check_expression(table_t* global_table, table_t* method_table, node* expr){
+    /*If it's an id (no children)*/
+    if (strcmp(expr->name, "Id") == 0){
+        symbol_t* symbol = find_symbol(method_table, expr->type);
+        if (symbol == NULL) expr->annotation = strdup("undef");
+        else expr->annotation = strdup(symbol->type);
+        return;
+    }
+
     /*If left child has no annotation, check it as well*/
     node* left = expr->son;
     if (!left->annotation){
@@ -257,6 +279,8 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
                 check_expression(global_table, method_table, right);
             else if (is_assignment(right)) 
                 check_assignment(global_table, method_table, right);
+            else if (is_statement(right))
+                check_statement(global_table, method_table, right);
             else if (strcmp(right->name, "Id") == 0){
                 symbol_t* symbol = find_symbol(method_table, right->type);
                 if (!symbol) right->annotation = strdup("undef");
@@ -338,7 +362,38 @@ void annotate_expression(node* left, node* right, node* expr){
 }
 
 void check_assignment(table_t* global_table, table_t* method_table, node* assign){
+    /*If Id is not annotated, annotate it*/
+    node* assign_id = assign->son;
+    if (!assign_id->annotation){
+        symbol_t* found = find_symbol(method_table, assign_id->type);
+        if (found == NULL) assign_id->annotation = strdup("undef");
+        else assign_id->annotation = strdup(found->type);
+    }
 
+    /*If right child is not annotated, check it as well*/
+    node* right = assign->son->next;
+    if (!right->annotation){
+        if (is_expr(right)) check_expression(global_table, method_table, right);
+        else if (is_assignment(right)) check_assignment(global_table, method_table, right);
+    }
+
+    /*Check assign statement*/
+    if (!right->annotation){
+        // TODO: Print error
+        assign->annotation = strdup("undef");
+    }
+    else{
+        /*If any of the annotations are undef, or they are do not match, assign error*/
+        if (strcmp(assign_id->annotation, right->annotation) != 0
+            || strcmp(assign_id->annotation, "undef") == 0
+            || strcmp(right->annotation, "undef") == 0)
+            {
+                //TODO: print error
+                assign->annotation = strdup("undef");
+            }
+
+        else assign->annotation = strdup(assign_id->annotation);
+    }
 }
 
 void check_block(table_t* global_table, table_t* method_table, node* stmt){
@@ -367,13 +422,12 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
     if (child && !child->annotation){
         if (is_expr(child)) check_expression(global_table, method_table, child);
         else if (is_assignment(child)) check_assignment(global_table, method_table, child);
+        else if (is_statement(child)) check_statement(global_table, method_table, child);
     }
 
     /*Check if child annotation matches with method return type*/
-    if (child){
-        if (strcmp(child->annotation, method_table->return_type) != 0){
-            // TODO: Print error
-        }
+    if (child && strcmp(child->annotation, method_table->return_type) != 0){
+        // TODO: Print error
     }
 }
 
@@ -412,6 +466,10 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
 
 }
 
+void check_print(table_t* global_table, table_t* method_table, node* print){
+
+}
+
 bool is_expr(node* src){
     return strcmp(src->name, "Sub") == 0
            || strcmp(src->name, "Mul") == 0
@@ -431,7 +489,8 @@ bool is_expr(node* src){
            || strcmp(src->name, "Lshift") == 0
            || strcmp(src->name, "Rshift") == 0
            || strcmp(src->name, "Minus") == 0
-           || strcmp(src->name, "Plus") == 0;
+           || strcmp(src->name, "Plus") == 0
+           || strcmp(src->name, "Id") == 0;
 }
 
 bool is_assignment(node* src){
