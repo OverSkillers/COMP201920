@@ -378,6 +378,39 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
 }
 
 void check_while(table_t* global_table, table_t* method_table, node* while_node){
+    /*Check left node*/
+    node* left = while_node->son->next;
+    /*If left node has no annotation, check it as well*/
+    if (!left->annotation){
+        if (is_block_node(left)) check_block(global_table, method_table, left);
+        else if (is_statement(left)) check_statement(global_table, method_table, left);
+    }
+
+    /*Check right node*/
+    node* right = while_node->son->next->next;
+    /*If right node has no annotation, check it as well*/
+    if (!right->annotation){
+        if (is_block_node(right)) check_block(global_table, method_table, right);
+        else if (is_statement(right)) check_statement(global_table, method_table, right);
+    }
+
+    /*Check condition*/
+    node* condition = while_node->son;
+    /*If condition has no annotation, check it as well*/
+    if (!condition->annotation){
+        if (is_expr(condition)) 
+            check_expression(global_table, method_table, condition);
+        else if (is_assignment(condition))
+            check_assignment(global_table, method_table, condition);
+    }
+
+    /*Semantically check the if statement, only boolean accepted in condition*/
+    if (condition->annotation){
+        if (strcmp(condition->annotation, "boolean") != 0){
+            printf("Line %d, col %d: Incompatible type %s in if  statement\n",while_node->line, while_node->col, while_node->annotation);
+        }
+    }
+    else printf("Line %d, col %d: Incompatible type %s in if  statement\n",while_node->line, while_node->col, "undef");
 
 }
 
