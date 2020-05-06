@@ -16,6 +16,7 @@ typedef struct n{
 	char *name;
 	char *type;
     char *annotation;
+    char* literal;
 	struct n* son;
 	struct n* next;
     int line;
@@ -26,6 +27,7 @@ typedef struct n{
 
 node* create_node(const char* name,const char* type, int line, int col);
 void set_annotation(node*, const char*);
+void set_literal_symbol(node*, const char*);
 void add_next(node* n, node* n2);
 void add_son(node* n, node* son);
 bool is_block(node* n);

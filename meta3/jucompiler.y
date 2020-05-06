@@ -443,6 +443,7 @@ Statementaux: ParseArgs {$$ = $1;}
         {
                 node* temp1 = create_node("Assign", "NULL", getLine($2), getCol($2));
                 node* temp2 = create_node("Id", $<args->val>1, getLine($1), getCol($1));
+                set_literal_symbol(temp1, "=");
                 add_son(temp1, temp2);
                 add_son(temp1, $3);
                 $$ = temp1;
@@ -476,6 +477,7 @@ Assignment: ID ASSIGN Aux
         {
                 node* temp1 = create_node("Assign", "NULL", getLine($2), getCol($2));
                 node* temp2 = create_node("Id", $<args->val>1, getLine($1), getCol($1));
+                set_literal_symbol(temp1, "=");
                 add_son(temp1, temp2);
                 add_son(temp1, $3);
                 $$ = temp1;
@@ -516,6 +518,7 @@ ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR
 Expr: Expr PLUS Expr 
         {
                 node* temp = create_node("Add", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "+");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -524,6 +527,7 @@ Expr: Expr PLUS Expr
         | Expr MINUS Expr 
         {
                 node* temp = create_node("Sub", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "-");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -532,6 +536,7 @@ Expr: Expr PLUS Expr
         | Expr STAR Expr 
         {
                 node* temp = create_node("Mul", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "*");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -540,6 +545,7 @@ Expr: Expr PLUS Expr
         | Expr DIV Expr 
         {
                 node* temp = create_node("Div", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "/");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -548,6 +554,7 @@ Expr: Expr PLUS Expr
         | Expr MOD Expr 
         {
                 node* temp = create_node("Mod", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "%");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -557,6 +564,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("And", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "&&");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -566,6 +574,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Or", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "||");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -575,6 +584,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Xor", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "^");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -583,6 +593,7 @@ Expr: Expr PLUS Expr
         | Expr LSHIFT Expr 
         {
                 node* temp = create_node("Lshift", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, "<<");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -591,6 +602,7 @@ Expr: Expr PLUS Expr
         | Expr RSHIFT Expr 
         {
                 node* temp = create_node("Rshift", "NULL", getLine($2), getCol($2));
+                set_literal_symbol(temp, ">>");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -600,6 +612,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Eq", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "==");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -609,6 +622,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Ge", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, ">=");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -618,6 +632,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Gt", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, ">");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -627,6 +642,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Le", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "<=");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -636,6 +652,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Lt", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "<");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -645,6 +662,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Ne", "NULL", getLine($2), getCol($2));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "!=");
                 add_son(temp, $1);
                 add_son(temp, $3);
                 $$ = temp;
@@ -654,6 +672,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Minus", "NULL", getLine($1), getCol($1));
                 set_annotation(temp, $2->annotation);
+                set_literal_symbol(temp, "-");
                 add_son(temp, $2);
                 $$=temp;
         } %prec NOT
@@ -662,6 +681,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Not", "NULL", getLine($1), getCol($1));
                 set_annotation(temp, "boolean");
+                set_literal_symbol(temp, "!");
                 add_son(temp, $2);
                 $$=temp;
         } %prec NOT
@@ -670,6 +690,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Plus", "NULL", getLine($1), getCol($1));
                 set_annotation(temp, $2->annotation);
+                set_literal_symbol(temp, "+");
                 add_son(temp, $2);
                 $$=temp;
         } %prec NOT
@@ -690,6 +711,7 @@ Expr: Expr PLUS Expr
         {
                 node* temp = create_node("Id", $<args->val>1, getLine($1), getCol($1));
                 node* temp1 = create_node("Length", "NULL", getLine($2), getCol($2));
+                set_annotation(temp, "int");
                 add_son(temp1, temp);
                 $$ = temp1;
         }

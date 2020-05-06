@@ -22,6 +22,12 @@ void set_annotation(node* dest, const char* annotation){
 	}
 }
 
+void set_literal_symbol(node* dest, const char* literal){
+	if (literal){
+		dest->literal = strdup(literal);
+	}
+}
+
 void add_next(node* n, node* n2){
 	if (n == NULL || n2 == NULL){
 		return;

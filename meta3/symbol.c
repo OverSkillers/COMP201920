@@ -111,8 +111,8 @@ void insert_symbol(table_t* table, symbol_t* symbol){
         table->last = symbol;
     } else {
         symbol_t* found;
-        if (symbol->func) found = find_method(table, symbol->name, symbol->paramtypes);
-        else found = find_symbol(table, symbol->name);
+        if (symbol->func) found = find_method(table, symbol->name, symbol->paramtypes, NULL);
+        else found = find_symbol(table, symbol->name, NULL);
 
         if (found == NULL){
             table->last->next = symbol;
@@ -124,7 +124,7 @@ void insert_symbol(table_t* table, symbol_t* symbol){
     }
 }
 
-symbol_t* find_symbol(table_t* table, char* name){
+symbol_t* find_symbol(table_t* table, char* name, node* src){
     symbol_t* s = table->first;
     while (s != NULL){
         if (strcmp(s->name, name) == 0){
@@ -132,12 +132,19 @@ symbol_t* find_symbol(table_t* table, char* name){
         }
         s = s->next;
     }
-    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0) return NULL;
-    else return find_symbol(global, name);
+    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
+        if (src){
+            printf("Line %d, col %d: Cannot find symbol %s\n", 
+                    src->line, src->col, name);
+        }
+        return NULL;
+    }
+    else return find_symbol(global, name, src);
 }
 
-symbol_t* find_method(table_t* table, char* name, paramtypes_t* params){
+symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* call){
     symbol_t* s = table->first;
+    // TODO: Print errors
     while (s != NULL){
         if (strcmp(s->name, name) == 0){
             /*Check the arguments*/
@@ -159,6 +166,12 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params){
         }
         s = s->next;
     }
-    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0) return NULL;
-    else return find_symbol(global, name);
+    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
+        if (call){
+            printf("Line %d, col %d: Cannot find symbol %s\n",
+                call->line, call->col, name);
+        }
+        return NULL;
+    }
+    else return find_method(global, name, params, call);
 }

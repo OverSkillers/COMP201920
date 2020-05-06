@@ -192,14 +192,13 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
     }
     /*Check if arguments match with method signature*/
     node* id = call_node->son;
-    symbol_t* method = find_method(global, id->type, params);
+    symbol_t* method = find_method(global, id->type, params, call_node);
 
     char *str = malloc(sizeof(MAX_PARAMS_ANNOTATION_LEN));
     set_annotation(call_node->son, "undef");
 
     /*Annotate call with return type and id node with paramtypes*/
     if (method == NULL){
-        // TODO: Print error
         set_annotation(call_node, "undef");
     }
     else{
@@ -219,7 +218,7 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
 void check_expression(table_t* global_table, table_t* method_table, node* expr){
     /*If it's an id (no children)*/
     if (strcmp(expr->name, "Id") == 0){
-        symbol_t* symbol = find_symbol(method_table, expr->type);
+        symbol_t* symbol = find_symbol(method_table, expr->type, expr);
         if (symbol == NULL) expr->annotation = strdup("undef");
         else expr->annotation = strdup(symbol->type);
         return;
@@ -233,7 +232,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         else if (is_assignment(left)) 
             check_assignment(global_table, method_table, left);
         else if (strcmp(left->name, "Id") == 0){
-            symbol_t* symbol = find_symbol(method_table, left->type);
+            symbol_t* symbol = find_symbol(method_table, left->type, left);
             if (!symbol) left->annotation = strdup("undef");
             else left->annotation = strdup(symbol->type);
         }
@@ -258,13 +257,13 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
                     && strcmp(left->annotation, "double") != 0)
                     {
                         if (strcmp(expr->name, "Plus") == 0){
-                            // TODO: Print error
-                        printf("Line %d, col %d: Operator + cannot be applied to type %s",expr->line, expr->col, expr->annotation);
+                            printf("Line %d, col %d: Operator + cannot be applied to type %s\n",
+                                    expr->line, expr->col, expr->annotation);
                         }
 
                         if (strcmp(expr->name, "Minus") == 0){
-                            // TODO: Print error
-                        printf("Line %d, col %d: Operator - cannot be applied to type %s",expr->line, expr->col, expr->annotation);
+                            printf("Line %d, col %d: Operator - cannot be applied to type %s\n",
+                                    expr->line, expr->col, expr->annotation);
                         }
                         expr->annotation = strdup("undef");
             }
@@ -274,8 +273,8 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         else if (strcmp(expr->name, "Not") == 0){
             /*Only boolean type is accepted*/
             if (strcmp(left->annotation, "boolean") != 0){
-                // TODO: Print error
-                        printf("Line %d, col %d: Operator ! cannot be applied to type %s",expr->line, expr->col, expr->annotation);
+                        printf("Line %d, col %d: Operator ! cannot be applied to type %s\n",
+                                expr->line, expr->col, expr->annotation);
                         expr->annotation = strdup("undef");
             }
             else expr->annotation = strdup(left->annotation);
@@ -291,7 +290,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
             else if (is_statement(right))
                 check_statement(global_table, method_table, right);
             else if (strcmp(right->name, "Id") == 0){
-                symbol_t* symbol = find_symbol(method_table, right->type);
+                symbol_t* symbol = find_symbol(method_table, right->type, right);
                 if (!symbol) right->annotation = strdup("undef");
                 else right->annotation = strdup(symbol->type);
             }
@@ -316,8 +315,9 @@ void annotate_expression(node* left, node* right, node* expr){
                 || (strcmp(right->annotation, "int") != 0
                 && strcmp(right->annotation, "double") != 0))
                 {
-                    // TODO: Print error
-                    printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
+                    printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                expr->line, expr->col,expr->literal,
+                                left->annotation, right->annotation);
                     expr->annotation = strdup("undef");
                 }
 
@@ -349,8 +349,9 @@ void annotate_expression(node* left, node* right, node* expr){
                 if (strcmp(left->annotation, "boolean") != 0
                     || strcmp(right->annotation, "boolean") != 0)
                     {
-                        // TODO: Print error
-                        printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
+                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                expr->line, expr->col,expr->literal,
+                                left->annotation, right->annotation);
                         expr->annotation = strdup("undef");
                     }
 
@@ -364,8 +365,9 @@ void annotate_expression(node* left, node* right, node* expr){
                 if (strcmp(left->annotation, "int") == 0
                     || strcmp(right->annotation, "int") == 0)
                     {
-                        // TODO: Print error
-                        printf("Line %d, col %d: Operators %s cannot be applied to types %s, %s",expr->line, expr->col,expr->name,left->annotation,right->annotation);
+                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                expr->line, expr->col, expr->literal,
+                                left->annotation, right->annotation);
                         expr->annotation = strdup("undef");
                     }
 
@@ -373,11 +375,12 @@ void annotate_expression(node* left, node* right, node* expr){
             }
 }
 
+// FIXME: when one of children is undef, assign does not get undef
 void check_assignment(table_t* global_table, table_t* method_table, node* assign){
     /*If Id is not annotated, annotate it*/
     node* assign_id = assign->son;
     if (!assign_id->annotation){
-        symbol_t* found = find_symbol(method_table, assign_id->type);
+        symbol_t* found = find_symbol(method_table, assign_id->type, assign_id);
         if (found == NULL) assign_id->annotation = strdup("undef");
         else assign_id->annotation = strdup(found->type);
     }
@@ -391,7 +394,9 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
 
     /*Check assign statement*/
     if (!right->annotation){
-        // TODO: Print error
+        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                assign->line, assign->col,assign->literal,
+                                assign_id->annotation, "undef");
         assign->annotation = strdup("undef");
     }
     else{
@@ -400,7 +405,9 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
             || strcmp(assign_id->annotation, "undef") == 0
             || strcmp(right->annotation, "undef") == 0)
             {
-                //TODO: print error
+                printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                assign->line, assign->col,assign->literal,
+                                assign_id->annotation, right->annotation);
                 assign->annotation = strdup("undef");
             }
 
@@ -431,6 +438,14 @@ void check_statement(table_t* global_table, table_t* method_table, node* stmt){
 void check_return(table_t* global_table, table_t* method_table, node* return_node){
     /*Check child if not annotated yet*/
     node* child = return_node->son;
+    /*Return void*/
+    if (!child){
+        /*Check if method is supposed to return something*/
+        if (strcmp(method_table->return_type, "void") != 0){
+            printf("Line %d, col %d: Incompatible type void in return statement\n", 
+                    return_node->line, return_node->col);
+        }
+    }
     if (child && !child->annotation){
         if (is_expr(child)) check_expression(global_table, method_table, child);
         else if (is_assignment(child)) check_assignment(global_table, method_table, child);
@@ -439,7 +454,8 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
 
     /*Check if child annotation matches with method return type*/
     if (child && strcmp(child->annotation, method_table->return_type) != 0){
-        // TODO: Print error
+        printf("Line %d, col %d: Incompatible type %s in return statement\n", 
+                    return_node->line, return_node->col, child->annotation);
     }
 }
 
