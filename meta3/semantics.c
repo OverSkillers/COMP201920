@@ -7,16 +7,45 @@ table_t* sem(node* tree, node* begin){
     node* temp = tree->son; 
     table_t* global_table = global;
     table_t* last_table = global_table;
+
+    /*Save the MethodBody's we find for last*/
+    struct methodbody_list{
+        node* method_body;
+        table_t* method_table;
+        struct methodbody_list* next;
+    };
+
+    struct methodbody_list* methods = NULL;
+    struct methodbody_list* current = methods;
+
     while(temp){
         // FIXME ? Is it temp->name ?
         if (strcmp(FUNC_DECL, temp->name) == 0){
             last_table = check_func_decl(global_table, last_table, temp);
+
+            struct methodbody_list* new_body = malloc(sizeof(struct methodbody_list));
+            if (methods == NULL) methods = new_body;
+            else current->next = new_body;
+
+            new_body->method_body = temp->son->next;
+            new_body->method_table = last_table;
+            new_body->next = NULL;
+
+            current = new_body;
         }
         else if (strcmp(FIELD_DECL, temp->name) == 0){
             check_field_decl(global_table, temp);
         }
 
         temp = temp->next;
+    }
+
+    /*After checking every function declaration, check the method bodies*/
+    current = methods;
+    while(current){
+        check_method_body(global_table, current->method_table, current->method_body);
+
+        current = current->next;
     }
 
     return global;
@@ -74,9 +103,6 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
 
     /*Insert param types into global symbol table*/
     insert_symbol(global_table, create_symbol(func_decl->son, true, false, params));
-
-    node* method_body = func_decl->son->next;
-    check_method_body(global_table, new_symbol_table, method_body);
 
     return new_symbol_table;
 }

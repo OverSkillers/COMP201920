@@ -111,7 +111,7 @@ void insert_symbol(table_t* table, symbol_t* symbol){
         table->last = symbol;
     } else {
         symbol_t* found;
-        if (symbol->func) found = find_method(table, symbol->name, symbol->paramtypes, NULL);
+        if (symbol->func) found = find_method(global, symbol->name, symbol->paramtypes, NULL);
         else found = find_symbol(table, symbol->name, NULL);
 
         if (found == NULL){
@@ -150,28 +150,30 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
             /*Check the arguments*/
             bool correct = true;
             paramtypes_t* temp_params = s->paramtypes;
-            while(temp_params && params){
-                if (strcmp(temp_params->type, params->type) != 0){
+            paramtypes_t* passed_params = params;
+            while(temp_params && passed_params){
+                // TODO: Compatible arguments (int where double is required)
+                // TODO: Maybe boolean with int as well?
+                if (strcmp(temp_params->type, passed_params->type) != 0){
                     correct = false;
                     break;
                 }
 
                 temp_params = temp_params->next;
-                params = params->next;
+                passed_params = passed_params->next;
             }
 
-            if (temp_params || params) correct = false;
+            if (temp_params || passed_params) correct = false;
 
             if (correct) return s;
         }
         s = s->next;
     }
-    if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
-        if (call){
-            printf("Line %d, col %d: Cannot find symbol %s\n",
-                call->line, call->col, name);
-        }
-        return NULL;
+    if (call){
+        printf("Line %d, col %d: Cannot find symbol %s (",
+            call->son->line, call->son->col, name);
+        print_params_str(params, false, NULL);
+        printf(")\n");
     }
-    else return find_method(global, name, params, call);
+    return NULL;
 }

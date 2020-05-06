@@ -131,7 +131,7 @@ int getLineN(node* n){
 		return 0;
 	}
 	else{
-		return n->col;
+		return n->line;
 	}
 }
 
