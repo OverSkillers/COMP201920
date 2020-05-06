@@ -173,10 +173,10 @@ total_columns,NULL);total_columns += strlen(yytext); if (print_tokens==1) printf
 "while"                                 { init_yylval(total_lines,
 total_columns,NULL);total_columns += strlen(yytext); if (print_tokens==1) printf("WHILE\n");if(arvore == 1) return WHILE;};
 
-{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, error_line_column_String, strdup(yytext));return RESERVED;}};
-{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, error_line_column_String, strdup(yytext));return ID;}};
-{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, error_line_column_String, strdup(yytext));return INTLIT;}};
-{REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, error_line_column_String, strdup(yytext));return REALLIT;}};
+{RESERVED}                              {  total_columns += strlen(yytext); if (print_tokens==1) printf("RESERVED(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, total_columns, strdup(yytext));return RESERVED;}};
+{ID}                                    {  total_columns += strlen(yytext); if (print_tokens==1) printf("ID(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, total_columns, strdup(yytext));return ID;}};
+{INT}                                   {  total_columns += strlen(yytext); if (print_tokens==1) printf("INTLIT(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, total_columns, strdup(yytext));return INTLIT;}};
+{REALLIT}                               {  total_columns += strlen(yytext); if (print_tokens==1) printf("REALLIT(%s)\n", yytext);if(arvore == 1) {init_yylval(total_lines, total_columns, strdup(yytext));return REALLIT;}};
 
 .                                       {if(erros_lex == 1){printf("Line %d, col %d: illegal character (%s)\n", total_lines, total_columns, yytext);} total_columns += strlen(yytext);};
 
