@@ -327,6 +327,8 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
     }
 }
 
+/*FIXME: Remove annotation for literals in jucompiler.y, and do it here, to allow for
+    maximum value checking and whatnot*/
 void annotate_expression(node* left, node* right, node* expr){
     // FIXME: Maybe refactor this mess
     if (strcmp(expr->name, "Add") == 0
@@ -523,19 +525,54 @@ void check_while(table_t* global_table, table_t* method_table, node* while_node)
     /*Semantically check the while statement, only boolean accepted in condition*/
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
-            printf("Line %d, col %d: Incompatible type %s in while statement\n", while_node->line, while_node->col, while_node->annotation);
+            printf("Line %d, col %d: Incompatible type %s in while statement\n", 
+                    while_node->line, while_node->col, while_node->annotation);
         }
     }
-    else printf("Line %d, col %d: Incompatible type %s in while statement\n", while_node->line, while_node->col, "undef");
+    else printf("Line %d, col %d: Incompatible type %s in while statement\n", 
+                 while_node->line, while_node->col, "undef");
 
 }
 
 void check_parse_args(table_t* global_table, table_t* method_table, node* parse_args){
+    /*Check if id annotation exists*/
+    node* id_node = parse_args->son;
+    if (!id_node->annotation){
+        if (is_expr(id_node)) check_expression(global_table, method_table, id_node);
+        else if (is_assignment(id_node)) check_assignment(global_table, method_table, id_node);
+        else if (is_statement(id_node)) check_statement(global_table, method_table, id_node);
+    }
 
+    /*Check if literal is annotated*/
+    node* number = parse_args->son->next;
+    if (!number->annotation){
+        // TODO: Add annotation for literals
+    }
+
+    /*Check if parse args is valid*/
+    if (strcmp(id_node->annotation, "String[]") != 0){
+        printf("Line %d, col %d: Incompatible type %s in Integer.parseInt statement\n", 
+                parse_args->line, parse_args->col, parse_args->annotation);
+        parse_args->annotation = strdup("undef");
+    }
+    else parse_args->annotation = strdup("int");
 }
 
 void check_print(table_t* global_table, table_t* method_table, node* print){
+    /*Check if child annotation exists*/
+    node* child = print->son;
+    if (!child->annotation){
+        if (is_expr(child)) check_expression(global_table, method_table, child);
+        else if (is_assignment(child)) check_assignment(global_table, method_table, child);
+        else if (is_statement(child)) check_statement(global_table, method_table, child);
+    }
 
+    /*Check if print is valid*/
+    if (strcmp(child->annotation, "String[]") == 0
+        || strcmp(child->annotation, "void") == 0){
+        printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
+                print->line, print->col, print->annotation);
+    }
 }
 
 bool is_expr(node* src){

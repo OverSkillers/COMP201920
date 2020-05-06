@@ -412,6 +412,7 @@ Statement: LBRACE StatementRep RBRACE
         {
                 node* temp = create_node("Print", "NULL", getLine($1), getCol($1));
                 node* temp1 = create_node("StrLit", $<args->val>3, getLine($3), getCol($3));
+                set_annotation(temp1, "string");
                 add_son(temp, temp1);
                 $$ = temp;
         }

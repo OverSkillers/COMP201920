@@ -2,6 +2,7 @@
 # Clean previous tests
 rm test/lex/failed/*.out
 rm test/yacc/failed/*.out
+rm test/sem/failed/*.out
 
 BUILD="bash build.sh"
 
