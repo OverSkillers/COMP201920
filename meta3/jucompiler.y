@@ -142,7 +142,7 @@ MethodDecl: PUBLIC STATIC MethodHeader MethodBody
 
 FieldDecl: PUBLIC STATIC Type ID FieldDeclRep SEMICOLON 
         {
-                node* temp = create_node("FieldDecl", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("FieldDecl", "NULL", getLine($4), getCol($4));
                 node* temp1 = create_node("Id", $<args->val>4, getLine($4), getCol($4));
                 add_son(temp, $3);
                 add_son(temp, temp1);
@@ -168,7 +168,7 @@ FieldDeclRep: {$$ = NULL;}
 
         | COMMA ID FieldDeclRep 
         {
-                node* temp = create_node("FieldDecl", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("FieldDecl", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
                 add_son(temp, temp1);
                 add_next(temp, $3);
@@ -189,9 +189,9 @@ MethodHeader: {$$ = NULL;}
 
         | Type ID LPAR FormalParams RPAR 
         {
-                node* temp = create_node("MethodHeader", "NULL", getLineN($1), getColN($1));
+                node* temp = create_node("MethodHeader", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
-                node* temp2 = create_node("MethodParams", "NULL", getLineN($1), getColN($1));
+                node* temp2 = create_node("MethodParams", "NULL", getLine($2), getCol($2));
                 add_son(temp2, $4);
                 add_son(temp, $1);
                 add_son(temp, temp1);
@@ -201,10 +201,10 @@ MethodHeader: {$$ = NULL;}
 
         | VOID ID LPAR FormalParams RPAR 
         {
-                node* temp = create_node("MethodHeader", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("MethodHeader", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Void", "NULL", getLine($1), getCol($1));
                 node* temp2 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
-                node* temp3 = create_node("MethodParams", "NULL", getLine($1), getCol($1));
+                node* temp3 = create_node("MethodParams", "NULL", getLine($2), getCol($2));
                 add_son(temp3,$4);
                 add_son(temp, temp1);
                 add_son(temp, temp2);
@@ -218,7 +218,7 @@ FormalParams: {$$ = NULL;}
 
         | Type ID FormalParamsRep 
         {
-                node* temp = create_node("ParamDecl", "NULL", getLineN($1), getColN($1));
+                node* temp = create_node("ParamDecl", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
                 add_son(temp, $1);
                 add_son(temp, temp1);
@@ -228,7 +228,7 @@ FormalParams: {$$ = NULL;}
 
         | STR LSQ RSQ ID 
         {
-                node* temp = create_node("ParamDecl", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("ParamDecl", "NULL", getLine($3), getCol($3));
                 node* temp1 = create_node("StringArray", "NULL", getLine($1), getCol($1));
                 node* temp2 = create_node("Id", $<args->val>4, getLine($4), getCol($4));
                 add_next(temp1, temp2);
@@ -242,7 +242,7 @@ FormalParamsRep: {$$ = NULL;}
 
         | COMMA Type ID FormalParamsRep 
         {
-                node* temp = create_node("ParamDecl", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("ParamDecl", "NULL", getLine($3), getCol($3));
                 node* temp1 = create_node("Id", $<args->val>3, getLine($3), getCol($3));
                 add_son(temp, $2);
                 add_son(temp, temp1);
@@ -289,7 +289,7 @@ MethodBodyRep: {$$ = NULL;}
 
 VarDecl: Type ID VarDeclRep SEMICOLON 
         {
-                node* temp = create_node("VarDecl", "NULL", getLineN($1), getColN($1));
+                node* temp = create_node("VarDecl", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
                 add_son(temp, $1);
                 add_son(temp, temp1);
@@ -312,7 +312,7 @@ VarDeclRep: {$$ = NULL;}
 
         |COMMA ID VarDeclRep 
         {
-                node* temp = create_node("VarDecl", "NULL", getLine($1), getCol($1));
+                node* temp = create_node("VarDecl", "NULL", getLine($2), getCol($2));
                 node* temp1 = create_node("Id", $<args->val>2, getLine($2), getCol($2));
                 add_son(temp, temp1);
                 add_next(temp, $3);
@@ -503,7 +503,7 @@ ExprRep: {$$ = NULL;}
 
 ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR 
         {
-                node* temp = create_node("ParseArgs", "NULL", getLine($1),getCol($1));
+                node* temp = create_node("ParseArgs", "NULL", getLine($3),getCol($3));
                 set_annotation(temp, "int");
                 node* temp1 = create_node("Id", $<args->val>3, getLine($3), getCol($3));
                 add_son(temp, temp1);
