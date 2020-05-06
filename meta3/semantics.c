@@ -181,7 +181,7 @@ void check_if(table_t* global_table, table_t* method_table, node* if_node){
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
             printf("Line %d, col %d: Incompatible type %s in if statement\n", 
-                    if_node->line, if_node->col, if_node->annotation);
+                    if_node->line, if_node->col, condition->annotation);
         }
     }
     else printf("Line %d, col %d: Incompatible type %s in if statement\n", 
@@ -360,16 +360,11 @@ void annotate_expression(node* left, node* right, node* expr){
             }
         }
 
+    // FIXME: Is Not compatible with int? double?
     else if(strcmp(expr->name, "Xor") == 0
            || strcmp(expr->name, "And") == 0
            || strcmp(expr->name, "Or") == 0
-           || strcmp(expr->name, "Not") == 0
-           || strcmp(expr->name, "Lt") == 0
-           || strcmp(expr->name, "Gt") == 0
-           || strcmp(expr->name, "Le") == 0
-           || strcmp(expr->name, "Ge") == 0
-           || strcmp(expr->name, "Ne") == 0
-           || strcmp(expr->name, "Eq") == 0)
+           || strcmp(expr->name, "Not") == 0)
            {
                 /*Only boolean is accepted*/
                 if (strcmp(left->annotation, "boolean") != 0
@@ -383,6 +378,25 @@ void annotate_expression(node* left, node* right, node* expr){
 
                 else expr->annotation = strdup("boolean");
            }
+
+    else if (strcmp(expr->name, "Lt") == 0
+            || strcmp(expr->name, "Gt") == 0
+            || strcmp(expr->name, "Le") == 0
+            || strcmp(expr->name, "Ge") == 0
+            || strcmp(expr->name, "Ne") == 0
+            || strcmp(expr->name, "Eq") == 0)
+            {
+                // TODO: Allow void and String[]?
+                /*Both types must be equal*/
+                if (strcmp(left->annotation, right->annotation) != 0){
+                    printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                            expr->line, expr->col,expr->literal,
+                            left->annotation, right->annotation);
+                    expr->annotation = strdup("undef");
+                }
+
+                else expr->annotation = strdup("boolean");
+            }
 
     else if(strcmp(expr->name, "Lshift") == 0
             || strcmp(expr->name, "Rshift") == 0)

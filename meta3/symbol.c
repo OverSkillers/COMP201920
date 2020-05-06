@@ -144,34 +144,100 @@ symbol_t* find_symbol(table_t* table, char* name, node* src){
 
 symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* call){
     symbol_t* s = table->first;
-    // TODO: Print errors
+    symbol_t* possible = NULL;
+
+    bool partial;
+    bool correct;
+    int found = 0;
+
     while (s != NULL){
         if (strcmp(s->name, name) == 0){
-            /*Check the arguments*/
-            bool correct = true;
+            correct = true;
+            partial = false;
+
+            /*Set our formal parameter pointers, one for the symbol's we are trying to find 
+                and one for the symbol's we found in the symbol table*/
             paramtypes_t* temp_params = s->paramtypes;
             paramtypes_t* passed_params = params;
+
+            /*As long as both parameter pointers point to existing parameters*/
             while(temp_params && passed_params){
-                // TODO: Compatible arguments (int where double is required)
-                // TODO: Maybe boolean with int as well?
+                /*Check if the arguments are an exact match*/
                 if (strcmp(temp_params->type, passed_params->type) != 0){
-                    correct = false;
-                    break;
+                    /*They are not, but are they compatible? Only an int 
+                        for a formal double*/
+                    if (strcmp(temp_params->type, "double") == 0
+                        && strcmp(passed_params->type, "int") == 0)
+                        {
+                            /*They are compatible, set the partial flag to true*/
+                            partial = true;
+                        }
+
+                    /*They are not compatible, wrong method*/
+                    else{
+                        correct = false;
+                        break;
+                    }
                 }
 
                 temp_params = temp_params->next;
                 passed_params = passed_params->next;
             }
 
+            /*If the number of parameters vs arguments differ, wrong method*/
             if (temp_params || passed_params) correct = false;
 
-            if (correct) return s;
+            /*If we ever hit the partial = true and didn't hit correct = false, means 
+                we do not have an exact match, however they are compatible*/
+            if (correct && partial){
+                /*printf("POSSIBLE: FUNCTION PARAMS (");
+                print_params_str(s->paramtypes, false, NULL);
+                printf(") FOR CALLED PARAMS(");
+                print_params_str(params, false, NULL);
+                printf(")\n");*/
+                possible = s;
+                found += 1;
+            }
+
+            /*We do not have a partial match, but do we have an exact one?*/
+            else if (correct) return s;
+
+            /*We do not have any match, reset the partial flag*/
+            else if (!correct) partial = false;
         }
         s = s->next;
     }
+    /*If we've reached this point, means we haven't found an exact match, but 
+        may have compatible ones*/
+
+    /*This means we are inserting a new symbol, if we didn't find an exact
+        match, means symbol does not exist yet*/
+    if (!call){
+        return NULL;
+    }
+
+    /*Did we find compatible matches?*/
+    else if (found > 0){
+
+        /*If we found more than one compatible match, print an 'ambiguous' error*/
+        if (found > 1){
+            printf("Line %d, col %d: Reference to method %s is ambiguous\n",
+                    call->son->line, 
+                    (int)(call->son->col - (sizeof(call->name)/sizeof(char*))),
+                    name);
+            return NULL;
+        }
+
+        /*Otherwise return the only possible partial match*/
+        else return possible;
+    }
+
+    /*We did not find any match whatsoever*/
     if (call){
         printf("Line %d, col %d: Cannot find symbol %s (",
-            call->son->line, (int)(call->son->col - (sizeof(call->name)/sizeof(char*))), name);
+            call->son->line,
+            (int)(call->son->col - (sizeof(call->name)/sizeof(char*))),
+            name);
         print_params_str(params, false, NULL);
         printf(")\n");
     }

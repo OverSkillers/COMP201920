@@ -563,7 +563,7 @@ Expr: Expr PLUS Expr
         | Expr AND Expr 
         {
                 node* temp = create_node("And", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "&&");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -573,7 +573,7 @@ Expr: Expr PLUS Expr
         | Expr OR Expr 
         {
                 node* temp = create_node("Or", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "||");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -583,7 +583,7 @@ Expr: Expr PLUS Expr
         | Expr XOR Expr 
         {
                 node* temp = create_node("Xor", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "^");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -611,7 +611,7 @@ Expr: Expr PLUS Expr
         | Expr EQ Expr 
         {
                 node* temp = create_node("Eq", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "==");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -631,7 +631,7 @@ Expr: Expr PLUS Expr
         | Expr GT Expr 
         {
                 node* temp = create_node("Gt", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, ">");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -641,7 +641,7 @@ Expr: Expr PLUS Expr
         | Expr LE Expr 
         {
                 node* temp = create_node("Le", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "<=");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -651,7 +651,7 @@ Expr: Expr PLUS Expr
         | Expr LT Expr 
         {
                 node* temp = create_node("Lt", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "<");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -661,7 +661,7 @@ Expr: Expr PLUS Expr
         | Expr NE Expr 
         {
                 node* temp = create_node("Ne", "NULL", getLine($2), getCol($2));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "!=");
                 add_son(temp, $1);
                 add_son(temp, $3);
@@ -671,7 +671,7 @@ Expr: Expr PLUS Expr
         | MINUS Expr 
         {
                 node* temp = create_node("Minus", "NULL", getLine($1), getCol($1));
-                set_annotation(temp, $2->annotation);
+                //set_annotation(temp, $2->annotation);
                 set_literal_symbol(temp, "-");
                 add_son(temp, $2);
                 $$=temp;
@@ -680,7 +680,7 @@ Expr: Expr PLUS Expr
         | NOT Expr 
         {
                 node* temp = create_node("Not", "NULL", getLine($1), getCol($1));
-                set_annotation(temp, "boolean");
+                //set_annotation(temp, "boolean");
                 set_literal_symbol(temp, "!");
                 add_son(temp, $2);
                 $$=temp;
@@ -689,7 +689,7 @@ Expr: Expr PLUS Expr
         | PLUS Expr 
         {
                 node* temp = create_node("Plus", "NULL", getLine($1), getCol($1));
-                set_annotation(temp, $2->annotation);
+                //set_annotation(temp, $2->annotation);
                 set_literal_symbol(temp, "+");
                 add_son(temp, $2);
                 $$=temp;
