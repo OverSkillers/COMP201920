@@ -119,7 +119,7 @@ void insert_symbol(table_t* table, symbol_t* symbol){
             table->last = symbol;
         } else {
             printf("Line %d, col %d: Symbol %s already defined\n", 
-                symbol->line, symbol->col, symbol->name);
+                symbol->line, (int)(symbol->col - strlen(symbol->name)), symbol->name);
         }
     }
 }
@@ -135,7 +135,7 @@ symbol_t* find_symbol(table_t* table, char* name, node* src){
     if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
         if (src){
             printf("Line %d, col %d: Cannot find symbol %s\n", 
-                    src->line, src->col, name);
+                    src->line, (int)(src->col - (sizeof(src->name)/sizeof(char*))), name);
         }
         return NULL;
     }
@@ -171,7 +171,7 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
     }
     if (call){
         printf("Line %d, col %d: Cannot find symbol %s (",
-            call->son->line, call->son->col, name);
+            call->son->line, (int)(call->son->col - (sizeof(call->name)/sizeof(char*))), name);
         print_params_str(params, false, NULL);
         printf(")\n");
     }
