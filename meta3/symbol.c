@@ -134,7 +134,7 @@ symbol_t* find_symbol(table_t* table, char* name, node* src){
     }
     if (strcmp(table->type, GLOBAL_TABLE_TYPE) == 0){
         if (src){
-            printf("Line %d, col %d: Cannot find symbol %s\n", 
+            printf("Line %d, col %d: Cannot find symbol%s\n", 
                     src->line, (int)(src->col - (sizeof(src->name)/sizeof(char*))), name);
         }
         return NULL;
@@ -234,7 +234,7 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
 
     /*We did not find any match whatsoever*/
     if (call){
-        printf("Line %d, col %d: Cannot find symbol %s (",
+        printf("Line %d, col %d: Cannot find symbol%s (",
             call->son->line,
             (int)(call->son->col - (sizeof(call->name)/sizeof(char*))),
             name);
