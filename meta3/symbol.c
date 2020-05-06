@@ -236,7 +236,7 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
     if (call){
         printf("Line %d, col %d: Cannot find symbol %s(",
             call->son->line,
-            (int)(call->son->col - (sizeof(call->name)/sizeof(char*))),
+            (int)(call->son->col - strlen(name)),
             name);
         print_params_str(params, false, NULL);
         printf(")\n");
