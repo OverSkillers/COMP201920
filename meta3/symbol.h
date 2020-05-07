@@ -51,8 +51,8 @@ void print_table(table_t*);
 void print_params_str(paramtypes_t*, bool, char*);
 table_t* new_table(const char*, const char*, const char*);
 symbol_t* create_symbol(node*, bool, bool, paramtypes_t*);
-void insert_symbol(table_t*, symbol_t*);
-symbol_t* find_symbol(table_t*, char*, node*);
+void insert_symbol(table_t*, symbol_t*, bool);
+symbol_t* find_symbol(table_t*, char*, node*, bool);
 symbol_t* find_method(table_t*, char*, paramtypes_t*, node*);
 
 #endif

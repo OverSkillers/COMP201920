@@ -94,15 +94,15 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
         free(str);
 
         /*Insert param symbols into new table*/
-        insert_symbol(new_symbol_table, create_symbol(param_decl, false, true, NULL));
+        insert_symbol(new_symbol_table, create_symbol(param_decl, false, true, NULL), true);
 
         current = new_params;
         param_decl = param_decl->next;
     }
     new_symbol_table->paramtypes = params;
 
-    /*Insert param types into global symbol table*/
-    insert_symbol(global_table, create_symbol(func_decl->son, true, false, params));
+    /*Insert new method into global symbol table*/
+    insert_symbol(global_table, create_symbol(func_decl->son, true, false, params), false);
 
     return new_symbol_table;
 }
@@ -110,7 +110,7 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
 void check_field_decl(table_t* global_table, node* field_decl){
     /**/
     if (field_decl->son && field_decl->son->next){
-        insert_symbol(global_table, create_symbol(field_decl, false, false, NULL));
+        insert_symbol(global_table, create_symbol(field_decl, false, false, NULL), false);
     }
 }
 
@@ -119,7 +119,7 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
 
     while(temp){
         if (strcmp(VAR_DECL, temp->name) == 0){
-            insert_symbol(method_table, create_symbol(temp, false, false, NULL));
+            insert_symbol(method_table, create_symbol(temp, false, false, NULL), true);
         }
         else if (strcmp(IF_STMT, temp->name) == 0){
             check_if(global_table, method_table, temp);
@@ -244,7 +244,7 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
 void check_expression(table_t* global_table, table_t* method_table, node* expr){
     /*If it's an id (no children)*/
     if (strcmp(expr->name, "Id") == 0){
-        symbol_t* symbol = find_symbol(method_table, expr->type, expr);
+        symbol_t* symbol = find_symbol(method_table, expr->type, expr, false);
         if (symbol == NULL) expr->annotation = strdup("undef");
         else expr->annotation = strdup(symbol->type);
         return;
@@ -258,7 +258,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         else if (is_assignment(left)) 
             check_assignment(global_table, method_table, left);
         else if (strcmp(left->name, "Id") == 0){
-            symbol_t* symbol = find_symbol(method_table, left->type, left);
+            symbol_t* symbol = find_symbol(method_table, left->type, left, false);
             if (!symbol) left->annotation = strdup("undef");
             else left->annotation = strdup(symbol->type);
         }
@@ -316,7 +316,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
             else if (is_statement(right))
                 check_statement(global_table, method_table, right);
             else if (strcmp(right->name, "Id") == 0){
-                symbol_t* symbol = find_symbol(method_table, right->type, right);
+                symbol_t* symbol = find_symbol(method_table, right->type, right, false);
                 if (!symbol) right->annotation = strdup("undef");
                 else right->annotation = strdup(symbol->type);
             }
@@ -422,7 +422,7 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
     /*If Id is not annotated, annotate it*/
     node* assign_id = assign->son;
     if (!assign_id->annotation){
-        symbol_t* found = find_symbol(method_table, assign_id->type, assign_id);
+        symbol_t* found = find_symbol(method_table, assign_id->type, assign_id, false);
         if (found == NULL) assign_id->annotation = strdup("undef");
         else assign_id->annotation = strdup(found->type);
     }
@@ -450,7 +450,14 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
                 printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                                 assign->line, assign->col,assign->literal,
                                 assign_id->annotation, right->annotation);
-                assign->annotation = strdup("undef");
+
+                /*However, are any of the annotations int? If so, apply int to annotation*/
+                if (strcmp(assign_id->annotation, "int") == 0
+                    || strcmp(right->annotation, "int") == 0)
+                    {
+                        assign->annotation = strdup("int");
+                    }
+                else assign->annotation = strdup("undef");
             }
 
         else assign->annotation = strdup(assign_id->annotation);

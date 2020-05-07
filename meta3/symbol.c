@@ -105,14 +105,14 @@ symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt
     return symbol;
 }
 
-void insert_symbol(table_t* table, symbol_t* symbol){
+void insert_symbol(table_t* table, symbol_t* symbol, bool is_local){
     if (table->first == NULL){
         table->first = symbol;
         table->last = symbol;
     } else {
         symbol_t* found;
         if (symbol->func) found = find_method(global, symbol->name, symbol->paramtypes, NULL);
-        else found = find_symbol(table, symbol->name, NULL);
+        else found = find_symbol(table, symbol->name, NULL, is_local);
 
         if (found == NULL){
             table->last->next = symbol;
@@ -124,7 +124,7 @@ void insert_symbol(table_t* table, symbol_t* symbol){
     }
 }
 
-symbol_t* find_symbol(table_t* table, char* name, node* src){
+symbol_t* find_symbol(table_t* table, char* name, node* src, bool is_local){
     symbol_t* s = table->first;
     while (s != NULL){
         if (strcmp(s->name, name) == 0){
@@ -139,7 +139,14 @@ symbol_t* find_symbol(table_t* table, char* name, node* src){
         }
         return NULL;
     }
-    else return find_symbol(global, name, src);
+
+    /*We aren't yet on the global table*/
+    else{
+
+        /*Is this a method variable? If so, dont check the global table*/
+        if (is_local) return NULL;
+        else return find_symbol(global, name, src, is_local);
+    }
 }
 
 symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* call){
