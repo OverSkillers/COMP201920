@@ -266,13 +266,45 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
 }
 
 void check_expression(table_t* global_table, table_t* method_table, node* expr){
-    /*If it's an id (no children)*/
+    /*If it's an id ...*/
     if (strcmp(expr->name, "Id") == 0){
-        symbol_t* symbol = find_symbol(method_table, expr->type, expr, false);
-        if (symbol == NULL) expr->annotation = strdup("undef");
-        else expr->annotation = strdup(symbol->type);
+        /*... and has any children, is a .length, annotate it with int*/
+        if (expr->son){
+            expr->annotation = strdup("int");
+        }
+
+        else if (strcmp(expr->type, "args") == 0){
+            expr->annotation = strdup("String[]");
+        }
+
+        /*Else just look in the symbol tables*/
+        else{
+            symbol_t* symbol = find_symbol(method_table, expr->type, expr, false);
+            if (symbol == NULL) expr->annotation = strdup("undef");
+            else expr->annotation = strdup(symbol->type);
+        }
+
         return;
     }
+
+    /*If it's a declit, boollit or reallit*/
+    if (strcmp(expr->name, "DecLit") == 0){
+        expr->annotation = strdup("int");
+        return;
+    }
+    if (strcmp(expr->name, "RealLit") == 0){
+        expr->annotation = strdup("double");
+        return;
+    }
+    if (strcmp(expr->name, "BoolLit") == 0){
+        expr->annotation = strdup("boolean");
+        return;
+    }
+    if (strcmp(expr->name, "StrLit") == 0){
+        expr->annotation = strdup("string");
+        return;
+    }
+
 
     /*If left child has no annotation, check it as well*/
     node* left = expr->son;
@@ -456,6 +488,7 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
     if (!right->annotation){
         if (is_expr(right)) check_expression(global_table, method_table, right);
         else if (is_assignment(right)) check_assignment(global_table, method_table, right);
+        else if (is_statement(right)) check_statement(global_table, method_table, right);
     }
 
     /*Check assign statement*/
@@ -504,6 +537,7 @@ void check_statement(table_t* global_table, table_t* method_table, node* stmt){
     else if (strcmp(stmt->name, "Return") == 0) check_return(global_table, method_table, stmt);
     else if (strcmp(stmt->name, "If") == 0) check_if(global_table, method_table, stmt);
     else if (strcmp(stmt->name, "While") == 0) check_while(global_table, method_table, stmt);
+    else if (strcmp(stmt->name, "Print") == 0) check_print(global_table, method_table, stmt);
     else if (strcmp(stmt->name, "ParseArgs") == 0)
         check_parse_args(global_table, method_table, stmt);
 }
@@ -596,6 +630,7 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
         if (is_expr(id_node)) check_expression(global_table, method_table, id_node);
         else if (is_assignment(id_node)) check_assignment(global_table, method_table, id_node);
         else if (is_statement(id_node)) check_statement(global_table, method_table, id_node);
+        else id_node->annotation = strdup("String[]");
     }
 
     /*Check if right child is annotated*/
@@ -653,7 +688,10 @@ bool is_expr(node* src){
            || strcmp(src->name, "Rshift") == 0
            || strcmp(src->name, "Minus") == 0
            || strcmp(src->name, "Plus") == 0
-           || strcmp(src->name, "Id") == 0;
+           || strcmp(src->name, "Id") == 0
+           || strcmp(src->name, "DecLit") == 0
+           || strcmp(src->name, "BoolLit") == 0
+           || strcmp(src->name, "RealLit") == 0;
 }
 
 bool is_assignment(node* src){
