@@ -496,8 +496,32 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
 
     /*Check if child annotation matches with method return type*/
     if (child && strcmp(child->annotation, method_table->return_type) != 0){
-        printf("Line %d, col %d: Incompatible type %s in return statement\n", 
-                    return_node->line, return_node->col, child->annotation);
+        if (strcmp(child->name, "Sub") == 0
+           || strcmp(child->name, "Mul") == 0
+           || strcmp(child->name, "Div") == 0
+           || strcmp(child->name, "Mod") == 0
+           || strcmp(child->name, "Add") == 0
+           || strcmp(child->name, "Xor") == 0
+           || strcmp(child->name, "And") == 0
+           || strcmp(child->name, "Or") == 0
+           || strcmp(child->name, "Not") == 0
+           || strcmp(child->name, "Lt") == 0
+           || strcmp(child->name, "Gt") == 0
+           || strcmp(child->name, "Le") == 0
+           || strcmp(child->name, "Ge") == 0
+           || strcmp(child->name, "Ne") == 0
+           || strcmp(child->name, "Eq") == 0
+           || strcmp(child->name, "Lshift") == 0
+           || strcmp(child->name, "Rshift") == 0
+           || strcmp(child->name, "Minus") == 0
+           || strcmp(child->name, "Plus") == 0){
+        printf("Line %d, col %d: Incompatible type %s in return statement\n",
+                    child->line, child->col , child->annotation);
+
+          }else{
+            printf("Line %d, col %d: Incompatible type %s in return statement\n",
+                    child->line, (int)(child->col - strlen(child->type)) , child->annotation);
+         }
     }
 }
 
@@ -569,9 +593,9 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
 
     /*Check if print is valid*/
     if (strcmp(child->annotation, "String[]") == 0
-        || strcmp(child->annotation, "void") == 0){
+        || strcmp(child->annotation, "void") == 0 || strcmp(child->annotation, "undef") == 0){
         printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
-                print->line, print->col, print->annotation);
+                child->line, (int)(child->col - strlen(child->son->type)), child->annotation);
     }
 }
 

@@ -223,7 +223,7 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
         if (found > 1){
             printf("Line %d, col %d: Reference to method %s is ambiguous\n",
                     call->son->line, 
-                    (int)(call->son->col - (sizeof(call->name)/sizeof(char*))),
+                    (int)(call->son->col - strlen(name)),
                     name);
             return NULL;
         }
