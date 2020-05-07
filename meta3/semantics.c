@@ -69,7 +69,7 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     node* param_decl = method_params->son;
 
     /*Check funcDecl name*/
-    if (strcmp(func_decl->son->type, "_") == 0){
+    if (strcmp(func_decl->son->son->next->type, "_") == 0){
         printf("Line %d, col %d: Symbol _ is reserved\n",
                 func_decl->line, func_decl->col);
         return NULL;
@@ -428,8 +428,8 @@ void annotate_expression(node* left, node* right, node* expr){
             || strcmp(expr->name, "Rshift") == 0)
             {
                 /*TODO: Only int is accepted?*/
-                if (strcmp(left->annotation, "int") == 0
-                    || strcmp(right->annotation, "int") == 0)
+                if (strcmp(left->annotation, "int") != 0
+                    || strcmp(right->annotation, "int") != 0)
                     {
                         printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                                 expr->line, expr->col, expr->literal,
