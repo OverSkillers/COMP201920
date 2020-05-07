@@ -115,7 +115,7 @@ void check_field_decl(table_t* global_table, node* field_decl){
         if (strcmp(field_decl->son->next->type, "_") != 0)
             insert_symbol(global_table, create_symbol(field_decl, false, false, NULL), false);
         else printf("Line %d, col %d: Symbol _ is reserved\n",
-                field_decl->line, field_decl->col);
+                field_decl->line, field_decl->col - 1);
     }
 }
 
@@ -128,7 +128,7 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
             if (strcmp(temp->son->next->type, "_") != 0)
                 insert_symbol(method_table, create_symbol(temp, false, false, NULL), true);
             else printf("Line %d, col %d: Symbol _ is reserved\n",
-                    temp->line, temp->col);
+                    temp->line, temp->col - 1);
         }
         else if (strcmp(IF_STMT, temp->name) == 0){
             check_if(global_table, method_table, temp);
