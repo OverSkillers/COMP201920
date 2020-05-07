@@ -234,7 +234,8 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
         if (params == NULL) params = new_params;
         else current->next = new_params;
 
-        new_params->type = strdup(arguments->annotation);
+        if (arguments->annotation) new_params->type = strdup(arguments->annotation);
+        else new_params->type = strdup("none");
         new_params->next = NULL;
 
         current = new_params;
@@ -393,28 +394,38 @@ void annotate_expression(node* left, node* right, node* expr){
         || strcmp(expr->name, "Mul") == 0
         || strcmp(expr->name, "Mod") == 0)
         {
-            /*Rule out string, String[], void and boolean*/
-            if ((strcmp(left->annotation, "int") != 0
-                && strcmp(left->annotation, "double") != 0)
-                || (strcmp(right->annotation, "int") != 0
-                && strcmp(right->annotation, "double") != 0))
-                {
-                    printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-                                expr->line, expr->col,expr->literal,
-                                left->annotation, right->annotation);
-                    expr->annotation = strdup("undef");
-                }
-
-            else{
-                /*If either type is double, expression type will be double*/
-                if (strcmp(left->annotation, "double") == 0
-                    || strcmp(right->annotation, "double") == 0)
+            if (left->annotation && right->annotation)
+            {
+                /*Rule out string, String[], void and boolean*/
+                if ((strcmp(left->annotation, "int") != 0
+                    && strcmp(left->annotation, "double") != 0)
+                    || (strcmp(right->annotation, "int") != 0
+                    && strcmp(right->annotation, "double") != 0))
                     {
-                        expr->annotation = strdup("double");
+                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                    expr->line, expr->col,expr->literal,
+                                    left->annotation, right->annotation);
+                        expr->annotation = strdup("undef");
                     }
 
-                /*Only int type remains*/
-                else expr->annotation = strdup("int");
+                else{
+                    /*If either type is double, expression type will be double*/
+                    if (strcmp(left->annotation, "double") == 0
+                        || strcmp(right->annotation, "double") == 0)
+                        {
+                            expr->annotation = strdup("double");
+                        }
+
+                    /*Only int type remains*/
+                    else expr->annotation = strdup("int");
+                }
+            }
+            else {
+                printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                            expr->line, expr->col,expr->literal,
+                            left->annotation?left->annotation:"none",
+                            right->annotation?right->annotation:"none");
+                expr->annotation = strdup("undef");
             }
         }
 
@@ -424,17 +435,26 @@ void annotate_expression(node* left, node* right, node* expr){
            || strcmp(expr->name, "Or") == 0
            || strcmp(expr->name, "Not") == 0)
            {
-                /*Only boolean is accepted*/
-                if (strcmp(left->annotation, "boolean") != 0
-                    || strcmp(right->annotation, "boolean") != 0)
-                    {
-                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-                                expr->line, expr->col,expr->literal,
-                                left->annotation, right->annotation);
-                        expr->annotation = strdup("undef");
-                    }
+                if (left->annotation && right->annotation){
+                    /*Only boolean is accepted*/
+                    if (strcmp(left->annotation, "boolean") != 0
+                        || strcmp(right->annotation, "boolean") != 0)
+                        {
+                            printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                    expr->line, expr->col,expr->literal,
+                                    left->annotation, right->annotation);
+                            expr->annotation = strdup("undef");
+                        }
 
-                else expr->annotation = strdup("boolean");
+                    else expr->annotation = strdup("boolean");
+                }
+                else{
+                    printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                            expr->line, expr->col,expr->literal,
+                            left->annotation?left->annotation:"none", 
+                            right->annotation?right->annotation:"none");
+                    expr->annotation = strdup("undef");
+                }
            }
 
     else if (strcmp(expr->name, "Lt") == 0
@@ -446,14 +466,23 @@ void annotate_expression(node* left, node* right, node* expr){
             {
                 // TODO: Allow void and String[]?
                 /*Both types must be equal*/
-                if (strcmp(left->annotation, right->annotation) != 0){
+                if (left->annotation && right->annotation){
+                    if (strcmp(left->annotation, right->annotation) != 0){
+                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                expr->line, expr->col,expr->literal,
+                                left->annotation, right->annotation);
+                        expr->annotation = strdup("undef");
+                    }
+
+                    else expr->annotation = strdup("boolean");
+                }
+                else{
                     printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                             expr->line, expr->col,expr->literal,
-                            left->annotation, right->annotation);
+                            left->annotation?left->annotation:"none", 
+                            right->annotation?right->annotation:"none");
                     expr->annotation = strdup("undef");
                 }
-
-                else expr->annotation = strdup("boolean");
             }
 
     else if(strcmp(expr->name, "Lshift") == 0
@@ -466,10 +495,16 @@ void annotate_expression(node* left, node* right, node* expr){
                         printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                                 expr->line, expr->col, expr->literal,
                                 left->annotation, right->annotation);
-                        expr->annotation = strdup("undef");
+                        expr->annotation = strdup("none");
                     }
 
-                else expr->annotation = strdup("int");
+                else{
+                    /*Dont annotate anything but (L|R)shift*/
+                    free(left->annotation);
+                    free(right->annotation);
+                    left->annotation = NULL;
+                    right->annotation = NULL;
+                }
             }
 }
 
@@ -495,8 +530,14 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
     if (!right->annotation){
         printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                                 assign->line, assign->col,assign->literal,
-                                assign_id->annotation, "undef");
-        assign->annotation = strdup("undef");
+                                assign_id->annotation, "none");
+        /*However, is left annotation int or double? If so, apply int, double to annotation*/
+        if (strcmp(assign_id->annotation, "int") == 0
+            || strcmp(assign_id->annotation, "double") == 0)
+            {
+                assign->annotation = strdup(assign_id->annotation);
+            }
+        else assign->annotation = strdup("undef");
     }
     else{
         /*If any of the annotations are undef, or they are do not match, assign error*/
@@ -510,9 +551,11 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
 
                 /*However, are any of the annotations int? If so, apply int to annotation*/
                 if (strcmp(assign_id->annotation, "int") == 0
-                    || strcmp(right->annotation, "int") == 0)
+                    || strcmp(right->annotation, "int") == 0
+                    || strcmp(assign_id->annotation, "double") == 0
+                    || strcmp(right->annotation, "double") == 0)
                     {
-                        assign->annotation = strdup("int");
+                        assign->annotation = strdup(assign_id->annotation);
                     }
                 else assign->annotation = strdup("undef");
             }
@@ -560,7 +603,7 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
     }
 
     /*Check if child annotation matches with method return type*/
-    if (child && strcmp(child->annotation, method_table->return_type) != 0){
+    if (child && child->annotation && strcmp(child->annotation, method_table->return_type) != 0){
         if (strcmp(child->name, "Sub") == 0
            || strcmp(child->name, "Mul") == 0
            || strcmp(child->name, "Div") == 0
