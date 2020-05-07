@@ -71,7 +71,6 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     table_t* new_symbol_table = new_table(func_decl->son->son->next->type,
                                         METHOD_TABLE_TYPE,
                                         type_str);
-    last_table->next = new_symbol_table;
     free(type_str);
 
     while(param_decl){
@@ -102,15 +101,21 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     new_symbol_table->paramtypes = params;
 
     /*Insert new method into global symbol table*/
-    insert_symbol(global_table, create_symbol(func_decl->son, true, false, params), false);
-
-    return new_symbol_table;
+    if (insert_symbol(global_table, create_symbol(func_decl->son, true, false, params), false)){
+        last_table->next = new_symbol_table;
+        return new_symbol_table;
+    }
+    else return last_table;
 }
 
 void check_field_decl(table_t* global_table, node* field_decl){
     /**/
     if (field_decl->son && field_decl->son->next){
-        insert_symbol(global_table, create_symbol(field_decl, false, false, NULL), false);
+        /*Check if var name is allowed*/
+        if (strcmp(field_decl->son->next->type, "_") != 0)
+            insert_symbol(global_table, create_symbol(field_decl, false, false, NULL), false);
+        else printf("Line %d, col %d: Symbol _ is reserved\n",
+                field_decl->line, field_decl->col);
     }
 }
 
@@ -119,7 +124,11 @@ void check_method_body(table_t* global_table, table_t* method_table, node* metho
 
     while(temp){
         if (strcmp(VAR_DECL, temp->name) == 0){
-            insert_symbol(method_table, create_symbol(temp, false, false, NULL), true);
+            /*Check if var name is allowed*/
+            if (strcmp(temp->son->next->type, "_") != 0)
+                insert_symbol(method_table, create_symbol(temp, false, false, NULL), true);
+            else printf("Line %d, col %d: Symbol _ is reserved\n",
+                    temp->line, temp->col);
         }
         else if (strcmp(IF_STMT, temp->name) == 0){
             check_if(global_table, method_table, temp);

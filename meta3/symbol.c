@@ -105,7 +105,7 @@ symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt
     return symbol;
 }
 
-void insert_symbol(table_t* table, symbol_t* symbol, bool is_local){
+bool insert_symbol(table_t* table, symbol_t* symbol, bool is_local){
     if (table->first == NULL){
         table->first = symbol;
         table->last = symbol;
@@ -118,10 +118,21 @@ void insert_symbol(table_t* table, symbol_t* symbol, bool is_local){
             table->last->next = symbol;
             table->last = symbol;
         } else {
-            printf("Line %d, col %d: Symbol %s already defined\n", 
+            if (symbol->func){
+                printf("Line %d, col %d: Symbol %s(", 
                 symbol->line, (int)(symbol->col - strlen(symbol->name)), symbol->name);
+                print_params_str(symbol->paramtypes, false, NULL);
+                printf(") already defined\n");
+            }
+            else{
+                printf("Line %d, col %d: Symbol %s already defined\n", 
+                symbol->line, (int)(symbol->col - strlen(symbol->name)), symbol->name);
+            }
+            return false;
         }
     }
+
+    return true;
 }
 
 symbol_t* find_symbol(table_t* table, char* name, node* src, bool is_local){
@@ -197,11 +208,6 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
             /*If we ever hit the partial = true and didn't hit correct = false, means 
                 we do not have an exact match, however they are compatible*/
             if (correct && partial){
-                /*printf("POSSIBLE: FUNCTION PARAMS (");
-                print_params_str(s->paramtypes, false, NULL);
-                printf(") FOR CALLED PARAMS(");
-                print_params_str(params, false, NULL);
-                printf(")\n");*/
                 possible = s;
                 found += 1;
             }
