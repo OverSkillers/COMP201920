@@ -21,18 +21,26 @@ table_t* sem(node* tree, node* begin){
     while(temp){
         // FIXME ? Is it temp->name ?
         if (strcmp(FUNC_DECL, temp->name) == 0){
-            last_table = check_func_decl(global_table, last_table, temp);
+            table_t* temp_last_table;
+            temp_last_table = check_func_decl(global_table, last_table, temp);
 
-            struct methodbody_list* new_body = malloc(sizeof(struct methodbody_list));
-            if (methods == NULL) methods = new_body;
-            else current->next = new_body;
+            /*Did we receive a valid table? If not, do not check this method body
+                because function is invalid*/
+            if (temp_last_table != NULL){
+                last_table = temp_last_table;
 
-            new_body->method_body = temp->son->next;
-            new_body->method_table = last_table;
-            new_body->next = NULL;
+                struct methodbody_list* new_body = malloc(sizeof(struct methodbody_list));
+                if (methods == NULL) methods = new_body;
+                else current->next = new_body;
 
-            current = new_body;
+                new_body->method_body = temp->son->next;
+                new_body->method_table = last_table;
+                new_body->next = NULL;
+
+                current = new_body;
+            }
         }
+
         else if (strcmp(FIELD_DECL, temp->name) == 0){
             check_field_decl(global_table, temp);
         }
@@ -59,6 +67,13 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     paramtypes_t* current = params;
     node* method_params = func_decl->son->son->next->next;
     node* param_decl = method_params->son;
+
+    /*Check funcDecl name*/
+    if (strcmp(func_decl->son->type, "_") == 0){
+        printf("Line %d, col %d: Symbol _ is reserved\n",
+                func_decl->line, func_decl->col);
+        return NULL;
+    }
 
     /*Create new symbol table for new method*/
     char *type_str = strdup(func_decl->son->son->name);
@@ -105,7 +120,7 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
         last_table->next = new_symbol_table;
         return new_symbol_table;
     }
-    else return last_table;
+    else return NULL;
 }
 
 void check_field_decl(table_t* global_table, node* field_decl){
@@ -583,10 +598,13 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
         else if (is_statement(id_node)) check_statement(global_table, method_table, id_node);
     }
 
-    /*Check if literal is annotated*/
-    node* number = parse_args->son->next;
-    if (!number->annotation){
-        // TODO: Add annotation for literals
+    /*Check if right child is annotated*/
+    node* child = parse_args->son->next;
+    if (!child->annotation){
+        // TODO: Add annotation for this
+        if (is_expr(child)) check_expression(global_table, method_table, child);
+        else if (is_assignment(child)) check_assignment(global_table, method_table, child);
+        else if (is_statement(child)) check_statement(global_table, method_table, child);
     }
 
     /*Check if parse args is valid*/
