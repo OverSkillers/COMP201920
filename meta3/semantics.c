@@ -413,8 +413,8 @@ void annotate_expression(node* left, node* right, node* expr){
             || strcmp(expr->name, "Rshift") == 0)
             {
                 /*TODO: Only int is accepted?*/
-                if (strcmp(left->annotation, "int") != 0
-                    || strcmp(right->annotation, "int") != 0)
+                if (strcmp(left->annotation, "int") == 0
+                    || strcmp(right->annotation, "int") == 0)
                     {
                         printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
                                 expr->line, expr->col, expr->literal,
