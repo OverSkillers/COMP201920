@@ -332,7 +332,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
             check_assignment(global_table, method_table, right);
     }
 
-    /*If only one child, check for valid expression (plus, minus and not)*/
+    /*If only one child, check for valid expression (plus, minus, not, and length)*/
     if (!right){
         if (strcmp(expr->name, "Plus") == 0
             || strcmp(expr->name, "Minus") == 0)
@@ -363,6 +363,16 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
                         expr->annotation = strdup("undef");
             }
             else expr->annotation = strdup(left->annotation);
+        }
+        
+        /*TODO: Applies to string too?*/
+        else if (strcmp(expr->name, "Length") == 0){
+            if (strcmp(left->annotation, "String[]") != 0){
+                printf("Line %d, col %d: Operator %s cannot be applied to type %s\n",
+                        expr->line, expr->col, expr->literal,
+                        left->annotation);
+            }
+            expr->annotation = strdup("int");
         }
     }
     else{
@@ -541,15 +551,6 @@ void annotate_expression(node* left, node* right, node* expr){
                     right->annotation = NULL;
                 }
             }
-
-    /*TODO: Applies to string too?*/
-    else if (strcmp(expr->name, "Length") == 0){
-        if (strcmp(left->annotation, "String[]") != 0){
-            printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-                    expr->line, expr->col, expr->literal,
-                    left->annotation, right->annotation);
-        }
-    }
 }
 
 // FIXME: when one of children is undef, assign does not get undef
@@ -629,6 +630,7 @@ void check_statement(table_t* global_table, table_t* method_table, node* stmt){
         check_parse_args(global_table, method_table, stmt);
 }
 
+//FIXME: Call and parseargs have wrong col values
 void check_return(table_t* global_table, table_t* method_table, node* return_node){
     /*Check child if not annotated yet*/
     node* child = return_node->son;
@@ -640,15 +642,19 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
             printf("Line %d, col %d: Incompatible type void in return statement\n", 
                     return_node->line, return_node->col);
         }
+
+        return;
     }
-    if (child && !child->annotation){
+    else if (!child->annotation){
         if (is_expr(child)) check_expression(global_table, method_table, child);
         else if (is_assignment(child)) check_assignment(global_table, method_table, child);
         else if (is_statement(child)) check_statement(global_table, method_table, child);
     }
 
-    /*Check if child annotation matches with method return type*/
-    if (child && child->annotation && strcmp(child->annotation, method_table->return_type) != 0){
+    /*Check if child annotation matches with method return type, or*/
+    /*if the method isn't supposed to return anything, and it has something to return*/
+    if ((child->annotation && strcmp(child->annotation, method_table->return_type) != 0)
+        || (strcmp(method_table->return_type, "void") == 0 && child)){
         if (strcmp(child->name, "Sub") == 0
            || strcmp(child->name, "Mul") == 0
            || strcmp(child->name, "Div") == 0
@@ -667,16 +673,18 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
            || strcmp(child->name, "Lshift") == 0
            || strcmp(child->name, "Rshift") == 0
            || strcmp(child->name, "Minus") == 0
-           || strcmp(child->name, "Plus") == 0){
+           || strcmp(child->name, "Plus") == 0)
+           {
                // FIXME: Wrong col number
-        printf("Line %d, col %d: Incompatible type %s in return statement\n",
-                    child->line, child->col , child->annotation);
+                printf("Line %d, col %d: Incompatible type %s in return statement\n",
+                        child->line, child->col , child->annotation);
 
-          }else{
-              // FIXME: Wrong col number
+          }
+        else{
+            // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type %s in return statement\n",
                     child->line, (int)(child->col - strlen(child->type)) , child->annotation);
-         }
+        }
     }
 }
 
@@ -738,9 +746,16 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
         // FIXME: Wrong col number
         printf("Line %d, col %d: Incompatible type %s in Integer.parseInt statement\n", 
                 parse_args->line, parse_args->col, parse_args->annotation);
-        parse_args->annotation = strdup("undef");
     }
-    else parse_args->annotation = strdup("int");
+    // FIXME: Wrong col values
+    else if (strcmp(child->annotation, "int") != 0){
+        printf("Line %d, col %d: Operator Integer.parseInt cannot be applied to types %s, %s\n", 
+                parse_args->line,
+                parse_args->col,
+                id_node->annotation,
+                child->annotation);
+    }
+    parse_args->annotation = strdup("int");
 }
 
 void check_print(table_t* global_table, table_t* method_table, node* print){
@@ -752,6 +767,7 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
         else if (is_statement(child)) check_statement(global_table, method_table, child);
     }
 
+    //FIXME: Wrong col values
     /*Check if print is valid*/
     if (strcmp(child->annotation, "String[]") == 0
         || strcmp(child->annotation, "void") == 0 
