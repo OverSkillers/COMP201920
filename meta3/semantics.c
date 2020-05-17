@@ -61,7 +61,6 @@ table_t* sem(node* tree, node* begin){
 
 
 table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_decl){
-    // TODO: Check if method already exists
     /*Create param types*/
     paramtypes_t* params = NULL;
     paramtypes_t* current = params;
@@ -115,7 +114,7 @@ table_t* check_func_decl(table_t* global_table, table_t* last_table, node* func_
     }
     new_symbol_table->paramtypes = params;
 
-    /*Insert new method into global symbol table*/
+    /*Insert new method into global symbol table if not existing yet*/
     if (insert_symbol(global_table, create_symbol(func_decl->son, true, false, params), false)){
         last_table->next = new_symbol_table;
         return new_symbol_table;
@@ -204,10 +203,12 @@ void check_if(table_t* global_table, table_t* method_table, node* if_node){
     /*Semantically check the if statement, only boolean accepted in condition*/
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
+            // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type %s in if statement\n", 
                     if_node->line, if_node->col, condition->annotation);
         }
     }
+    // FIXME: Wrong col number
     else printf("Line %d, col %d: Incompatible type %s in if statement\n", 
                     if_node->line, if_node->col, "undef");
 }
@@ -288,6 +289,7 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         return;
     }
 
+    // TODO: Check limits
     /*If it's a declit, boollit or reallit*/
     if (strcmp(expr->name, "DecLit") == 0){
         expr->annotation = strdup("int");
@@ -384,8 +386,6 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
     }
 }
 
-/*FIXME: Remove annotation for literals in jucompiler.y, and do it here, to allow for
-    maximum value checking and whatnot*/
 void annotate_expression(node* left, node* right, node* expr){
     // FIXME: Maybe refactor this mess
     if (strcmp(expr->name, "Add") == 0
@@ -429,7 +429,6 @@ void annotate_expression(node* left, node* right, node* expr){
             }
         }
 
-    // FIXME: Is Not compatible with int? double?
     else if(strcmp(expr->name, "Xor") == 0
            || strcmp(expr->name, "And") == 0
            || strcmp(expr->name, "Or") == 0
@@ -465,23 +464,59 @@ void annotate_expression(node* left, node* right, node* expr){
             || strcmp(expr->name, "Eq") == 0)
             {
                 // TODO: Allow void and String[]?
-                /*Both types must be equal*/
                 if (left->annotation && right->annotation){
-                    if (strcmp(left->annotation, right->annotation) != 0){
-                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-                                expr->line, expr->col,expr->literal,
-                                left->annotation, right->annotation);
-                        expr->annotation = strdup("undef");
+                    /*Both types must be equal*/
+                    if (strcmp(left->annotation, right->annotation) != 0)
+                    {
+                        /*However, they may be compatible (int-double)*/
+                        if ((strcmp(left->annotation, "int") == 0
+                            && strcmp(right->annotation, "double") == 0)
+                            || 
+                            (strcmp(right->annotation, "int") == 0
+                            && strcmp(left->annotation, "double") == 0))
+                        {
+                            expr->annotation = strdup("boolean");
+                        }
+                        else
+                        {
+                            printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                    expr->line, expr->col,expr->literal,
+                                    left->annotation, right->annotation);
+                            expr->annotation = strdup("undef");
+                        }
+                        
                     }
-
                     else expr->annotation = strdup("boolean");
                 }
+
+                /*OR, one must be int/double and the other (L|R)shift*/
                 else{
-                    printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-                            expr->line, expr->col,expr->literal,
-                            left->annotation?left->annotation:"none", 
-                            right->annotation?right->annotation:"none");
-                    expr->annotation = strdup("undef");
+                    if ((right && strcmp(left->annotation, "undef") != 0
+                            && strcmp(left->annotation, "void") != 0
+                            && strcmp(left->annotation, "String[]") != 0
+                            && strcmp(left->annotation, "string") != 0
+                            && strcmp((right->name)+1, "shift") == 0)
+                        || 
+                        (left && strcmp(right->annotation, "undef") != 0
+                            && strcmp(right->annotation, "void") != 0
+                            && strcmp(right->annotation, "String[]") != 0
+                            && strcmp(right->annotation, "string") != 0
+                            && strcmp((left->name)+1, "shift") == 0))
+                        {
+                            printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                    expr->line, expr->col,expr->literal,
+                                    left->annotation?left->annotation:"none",
+                                    right->annotation?right->annotation:"none");
+                            expr->annotation = strdup("boolean");
+                        }
+                    else
+                    {
+                        printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                                expr->line, expr->col,expr->literal,
+                                left->annotation?left->annotation:"none", 
+                                right->annotation?right->annotation:"none");
+                        expr->annotation = strdup("undef");
+                    }
                 }
             }
 
@@ -506,6 +541,15 @@ void annotate_expression(node* left, node* right, node* expr){
                     right->annotation = NULL;
                 }
             }
+
+    /*TODO: Applies to string too?*/
+    else if (strcmp(expr->name, "Length") == 0){
+        if (strcmp(left->annotation, "String[]") != 0){
+            printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
+                    expr->line, expr->col, expr->literal,
+                    left->annotation, right->annotation);
+        }
+    }
 }
 
 // FIXME: when one of children is undef, assign does not get undef
@@ -592,6 +636,7 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
     if (!child){
         /*Check if method is supposed to return something*/
         if (strcmp(method_table->return_type, "void") != 0){
+            // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type void in return statement\n", 
                     return_node->line, return_node->col);
         }
@@ -623,10 +668,12 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
            || strcmp(child->name, "Rshift") == 0
            || strcmp(child->name, "Minus") == 0
            || strcmp(child->name, "Plus") == 0){
+               // FIXME: Wrong col number
         printf("Line %d, col %d: Incompatible type %s in return statement\n",
                     child->line, child->col , child->annotation);
 
           }else{
+              // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type %s in return statement\n",
                     child->line, (int)(child->col - strlen(child->type)) , child->annotation);
          }
@@ -657,10 +704,12 @@ void check_while(table_t* global_table, table_t* method_table, node* while_node)
     /*Semantically check the while statement, only boolean accepted in condition*/
     if (condition->annotation){
         if (strcmp(condition->annotation, "boolean") != 0){
+            // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type %s in while statement\n", 
                     while_node->line, while_node->col, while_node->annotation);
         }
     }
+    // FIXME: Wrong col number
     else printf("Line %d, col %d: Incompatible type %s in while statement\n", 
                  while_node->line, while_node->col, "undef");
 
@@ -679,7 +728,6 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
     /*Check if right child is annotated*/
     node* child = parse_args->son->next;
     if (!child->annotation){
-        // TODO: Add annotation for this
         if (is_expr(child)) check_expression(global_table, method_table, child);
         else if (is_assignment(child)) check_assignment(global_table, method_table, child);
         else if (is_statement(child)) check_statement(global_table, method_table, child);
@@ -687,6 +735,7 @@ void check_parse_args(table_t* global_table, table_t* method_table, node* parse_
 
     /*Check if parse args is valid*/
     if (strcmp(id_node->annotation, "String[]") != 0){
+        // FIXME: Wrong col number
         printf("Line %d, col %d: Incompatible type %s in Integer.parseInt statement\n", 
                 parse_args->line, parse_args->col, parse_args->annotation);
         parse_args->annotation = strdup("undef");
@@ -705,9 +754,12 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
 
     /*Check if print is valid*/
     if (strcmp(child->annotation, "String[]") == 0
-        || strcmp(child->annotation, "void") == 0 || strcmp(child->annotation, "undef") == 0){
+        || strcmp(child->annotation, "void") == 0 
+        || strcmp(child->annotation, "undef") == 0){
         printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
-                child->line, (int)(child->col - strlen(child->son->type)), child->annotation);
+                child->line, 
+                child->son?((int)(child->col - strlen(child->son->type))):child->col, 
+                child->annotation);
     }
 }
 
@@ -734,7 +786,8 @@ bool is_expr(node* src){
            || strcmp(src->name, "Id") == 0
            || strcmp(src->name, "DecLit") == 0
            || strcmp(src->name, "BoolLit") == 0
-           || strcmp(src->name, "RealLit") == 0;
+           || strcmp(src->name, "RealLit") == 0
+           || strcmp(src->name, "Length") == 0;
 }
 
 bool is_assignment(node* src){

@@ -507,7 +507,7 @@ ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR
                 node* temp = create_node("ParseArgs", "NULL", getLine($3),getCol($3));
                 //set_annotation(temp, "int");
                 node* temp1 = create_node("Id", $<args->val>3, getLine($3), getCol($3));
-                //set_annotation(temp1, "String[]");
+                set_annotation(temp1, "String[]");
                 add_son(temp, temp1);
                 add_son(temp, $5);
                 $$ = temp;
@@ -714,6 +714,8 @@ Expr: Expr PLUS Expr
                 node* temp = create_node("Id", $<args->val>1, getLine($1), getCol($1));
                 node* temp1 = create_node("Length", "NULL", getLine($2), getCol($2));
                 //set_annotation(temp, "int");
+                set_annotation(temp1, "int");
+                set_literal_symbol(temp1, ".length");
                 add_son(temp1, temp);
                 $$ = temp1;
         }
