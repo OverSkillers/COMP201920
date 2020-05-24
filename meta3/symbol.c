@@ -87,6 +87,8 @@ symbol_t* create_symbol(node* src, bool is_func, bool is_param, paramtypes_t* pt
     strcpy(symbol->name, src->son->next->type);
     symbol->func = is_func;
     symbol->param = is_param;
+    if (!is_param) symbol->used = false;
+    else symbol->used = true;
     // TODO: Free this memory
     symbol->type = malloc(MAX_SYMBOL_TYPE_LEN);
 

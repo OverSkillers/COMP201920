@@ -34,6 +34,7 @@ void check_return(table_t*, table_t*, node*);
 void check_while(table_t*, table_t*, node*);
 void check_parse_args(table_t*, table_t*, node*);
 void check_print(table_t*, table_t*, node*);
+void check_unused_symbols(table_t*);
 bool is_expr(node*);
 bool is_assignment(node*);
 bool is_block_node(node*);

@@ -53,8 +53,14 @@ table_t* sem(node* tree, node* begin){
     while(current){
         check_method_body(global_table, current->method_table, current->method_body);
 
+        /*Check if any locally defined symbols weren't used*/
+       // check_unused_symbols(current->method_table);
+
         current = current->next;
     }
+
+    /*Check whether any global symbols weren't used*/
+    //check_unused_symbols(global_table);
 
     return global;
 }
@@ -261,6 +267,7 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
 
         set_annotation(call_node->son, str);
         set_annotation(call_node, method->type);
+        method->used = true;
     }
 
     /*TODO: Free params*/
@@ -283,7 +290,10 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         else{
             symbol_t* symbol = find_symbol(method_table, expr->type, expr, false);
             if (symbol == NULL) expr->annotation = strdup("undef");
-            else expr->annotation = strdup(symbol->type);
+            else{
+                expr->annotation = strdup(symbol->type);
+                symbol->used = true;
+            }
         }
 
         return;
@@ -325,7 +335,10 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
         else if (strcmp(left->name, "Id") == 0){
             symbol_t* symbol = find_symbol(method_table, left->type, left, false);
             if (!symbol) left->annotation = strdup("undef");
-            else left->annotation = strdup(symbol->type);
+            else{
+                left->annotation = strdup(symbol->type);
+                symbol->used = true;
+            }
         }
     }
 
@@ -393,7 +406,10 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
             else if (strcmp(right->name, "Id") == 0){
                 symbol_t* symbol = find_symbol(method_table, right->type, right, false);
                 if (!symbol) right->annotation = strdup("undef");
-                else right->annotation = strdup(symbol->type);
+                else{
+                    right->annotation = strdup(symbol->type);
+                    symbol->used = true;
+                }
             }
         }
 
@@ -566,7 +582,10 @@ void check_assignment(table_t* global_table, table_t* method_table, node* assign
     if (!assign_id->annotation){
         symbol_t* found = find_symbol(method_table, assign_id->type, assign_id, false);
         if (found == NULL) assign_id->annotation = strdup("undef");
-        else assign_id->annotation = strdup(found->type);
+        else{
+            assign_id->annotation = strdup(found->type);
+            found->used = true;
+        }
     }
 
     /*If right child is not annotated, check it as well*/
@@ -783,6 +802,17 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
     }
 }
 
+void check_unused_symbols(table_t* table){
+    symbol_t* symbol = table->first;
+    while (symbol)
+    {
+        if (!symbol->used && !symbol->func)
+            printf("Line %d, column %d: Symbol %s declared but never used\n", 
+                    symbol->line, symbol->col, symbol->name);
+        symbol = symbol->next;
+    }
+}
+
 bool is_expr(node* src){
     return strcmp(src->name, "Sub") == 0
            || strcmp(src->name, "Mul") == 0
@@ -830,23 +860,5 @@ bool is_statement(node* src){
 
 //FIXME: Not catching number 10_0000_00000 in NoFlags.java, unsure why
 bool out_bounds(char* src_number){
-    char number[strlen(src_number)];
-    strcpy(number, src_number);
-    int end = strlen(src_number);
-
-    /*Remove any '_'*/
-    for(int i=0; i<end; i++){
-        if (number[i] == '_'){
-            for (int j=i; j<end; j++){
-                char temp = number[j+1];
-                number[j+1] = number[j];
-                number[j] = temp;
-            }
-            end--;
-        }
-    }
-
-    number[end] = '\0';
-
-    return strcmp(number, "2147483648") >= 0;
+    return atol(src_number) >= 2147483648;
 }
