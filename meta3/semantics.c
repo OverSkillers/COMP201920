@@ -292,6 +292,12 @@ void check_expression(table_t* global_table, table_t* method_table, node* expr){
     // TODO: Check limits
     /*If it's a declit, boollit or reallit*/
     if (strcmp(expr->name, "DecLit") == 0){
+        if (out_bounds(expr->type)){
+            printf("Line %d, col %d: Number %s out of bounds\n", 
+                    expr->line,
+                    expr->col - (int)(strlen(expr->type)),
+                    expr->type);
+        }
         expr->annotation = strdup("int");
         return;
     }
@@ -640,7 +646,7 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
         if (strcmp(method_table->return_type, "void") != 0){
             // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type void in return statement\n", 
-                    return_node->line, return_node->col);
+                    return_node->line, return_node->col + (int)strlen("return"));
         }
 
         return;
@@ -655,35 +661,25 @@ void check_return(table_t* global_table, table_t* method_table, node* return_nod
     /*if the method isn't supposed to return anything, and it has something to return*/
     if ((child->annotation && strcmp(child->annotation, method_table->return_type) != 0)
         || (strcmp(method_table->return_type, "void") == 0 && child)){
-        if (strcmp(child->name, "Sub") == 0
-           || strcmp(child->name, "Mul") == 0
-           || strcmp(child->name, "Div") == 0
-           || strcmp(child->name, "Mod") == 0
-           || strcmp(child->name, "Add") == 0
-           || strcmp(child->name, "Xor") == 0
-           || strcmp(child->name, "And") == 0
-           || strcmp(child->name, "Or") == 0
-           || strcmp(child->name, "Not") == 0
-           || strcmp(child->name, "Lt") == 0
-           || strcmp(child->name, "Gt") == 0
-           || strcmp(child->name, "Le") == 0
-           || strcmp(child->name, "Ge") == 0
-           || strcmp(child->name, "Ne") == 0
-           || strcmp(child->name, "Eq") == 0
-           || strcmp(child->name, "Lshift") == 0
-           || strcmp(child->name, "Rshift") == 0
-           || strcmp(child->name, "Minus") == 0
-           || strcmp(child->name, "Plus") == 0)
+        if (strcmp(child->name, "DecLit") == 0
+           || strcmp(child->name, "RealLit") == 0
+           || strcmp(child->name, "BoolLit") == 0
+           || strcmp(child->name, "Id") == 0)
            {
                // FIXME: Wrong col number
                 printf("Line %d, col %d: Incompatible type %s in return statement\n",
-                        child->line, child->col , child->annotation);
-
+                        child->line, (int)(child->col - strlen(child->type)) , child->annotation);
           }
+        else if (strcmp(child->name, "Call") == 0){
+            printf("Line %d, col %d: Incompatible type %s in return statement\n",
+                    child->line, (int)(child->col - strlen(child->son->type)) , child->annotation);
+        }
         else{
             // FIXME: Wrong col number
             printf("Line %d, col %d: Incompatible type %s in return statement\n",
-                    child->line, (int)(child->col - strlen(child->type)) , child->annotation);
+                    return_node->line,
+                    child->col,
+                    child->annotation);
         }
     }
 }
@@ -772,10 +768,18 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
     if (strcmp(child->annotation, "String[]") == 0
         || strcmp(child->annotation, "void") == 0 
         || strcmp(child->annotation, "undef") == 0){
-        printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
+        if (strcmp(child->name, "Call") == 0){
+            printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
                 child->line, 
-                child->son?((int)(child->col - strlen(child->son->type))):child->col, 
+                child->col - (int)strlen(child->son->type), 
                 child->annotation);
+        }
+        else{
+            printf("Line %d, col %d: Incompatible type %s in System.out.print statement\n", 
+                    child->line, 
+                    child->col - (int)strlen(child->type), 
+                    child->annotation);
+            }
     }
 }
 
@@ -822,4 +826,27 @@ bool is_statement(node* src){
            || strcmp(src->name, "Assign") == 0
            || strcmp(src->name, "Call") == 0
            || strcmp(src->name, "ParseArgs") == 0;
+}
+
+//FIXME: Not catching number 10_0000_00000 in NoFlags.java, unsure why
+bool out_bounds(char* src_number){
+    char number[strlen(src_number)];
+    strcpy(number, src_number);
+    int end = strlen(src_number);
+
+    /*Remove any '_'*/
+    for(int i=0; i<end; i++){
+        if (number[i] == '_'){
+            for (int j=i; j<end; j++){
+                char temp = number[j+1];
+                number[j+1] = number[j];
+                number[j] = temp;
+            }
+            end--;
+        }
+    }
+
+    number[end] = '\0';
+
+    return strcmp(number, "2147483648") >= 0;
 }

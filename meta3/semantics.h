@@ -38,5 +38,6 @@ bool is_expr(node*);
 bool is_assignment(node*);
 bool is_block_node(node*);
 bool is_statement(node*);
+bool out_bounds(char*);
 
 #endif

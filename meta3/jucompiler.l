@@ -234,14 +234,11 @@ int main(int argc, char **argv)
     else{
         print_tokens = 0;
         arvore = 1;
-        erros_lex = 1;
-        yylex();
+        erros_lex = 0;
         yyparse();
         if(erro == 0){
-                if (arvore == 1){
-                    print_tree(0,tree,0);
-                    free_tree(tree);
-                }
+                sem(tree, tree->son);
+                free_tree(tree);
             }
         }
 

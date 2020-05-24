@@ -504,7 +504,7 @@ ExprRep: {$$ = NULL;}
 
 ParseArgs: PARSEINT LPAR ID LSQ Aux RSQ RPAR 
         {
-                node* temp = create_node("ParseArgs", "NULL", getLine($3),getCol($3));
+                node* temp = create_node("ParseArgs", "NULL", getLine($1),getCol($1));
                 //set_annotation(temp, "int");
                 node* temp1 = create_node("Id", $<args->val>3, getLine($3), getCol($3));
                 set_annotation(temp1, "String[]");
