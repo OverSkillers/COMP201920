@@ -53,14 +53,8 @@ table_t* sem(node* tree, node* begin){
     while(current){
         check_method_body(global_table, current->method_table, current->method_body);
 
-        /*Check if any locally defined symbols weren't used*/
-       // check_unused_symbols(current->method_table);
-
         current = current->next;
     }
-
-    /*Check whether any global symbols weren't used*/
-    //check_unused_symbols(global_table);
 
     return global;
 }
@@ -799,17 +793,6 @@ void check_print(table_t* global_table, table_t* method_table, node* print){
                     child->col - (int)strlen(child->type), 
                     child->annotation);
             }
-    }
-}
-
-void check_unused_symbols(table_t* table){
-    symbol_t* symbol = table->first;
-    while (symbol)
-    {
-        if (!symbol->used && !symbol->func)
-            printf("Line %d, column %d: Symbol %s declared but never used\n", 
-                    symbol->line, symbol->col, symbol->name);
-        symbol = symbol->next;
     }
 }
 
