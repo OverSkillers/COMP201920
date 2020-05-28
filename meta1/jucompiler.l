@@ -1,8 +1,7 @@
+/*Joao Mendes 2016230975*/
 %{
     #define MAX_STR 1024
 
-    //Joao Mendes 2016230975
-    //Gabriela Costa 2017254837
     //If argument -1 is received, set as 1
     int print_tokens;
 
