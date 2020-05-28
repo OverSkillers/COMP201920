@@ -1,3 +1,4 @@
+/*João Mendes Nº2016230975*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

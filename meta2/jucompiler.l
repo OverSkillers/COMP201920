@@ -1,4 +1,4 @@
-/*João Mendes Nº2016230975      Gabriela Costa Nº2017254837*/
+/*João Mendes Nº2016230975*/
 %{
     #define MAX_STR 1024
     #include <stdlib.h>
