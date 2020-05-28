@@ -263,7 +263,15 @@ void check_call(table_t* global_table, table_t* method_table, node* call_node){
     }
 
     /*TODO: Free params*/
-    //free_paramtypes_t(params);
+    paramtypes_t* next_params = params;
+        while(next_params){
+            params = next_params;
+
+            free(params->type);
+
+            next_params = params->next;
+            free(params);
+        }
 }
 
 void check_expression(table_t* global_table, table_t* method_table, node* expr){

@@ -1,4 +1,4 @@
-/*João Mendes Nº2016230975      Gabriela Costa Nº2017254837*/
+/*João Mendes Nº2016230975*/
 %{
     #define MAX_STR 1024
     #include <stdlib.h>
@@ -220,6 +220,7 @@ int main(int argc, char **argv)
                     print_table(tables);
                     print_tree(0,tree,1);
                     free_tree(tree);
+                    free_tables(tables);
                 }
             }
         }

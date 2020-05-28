@@ -54,5 +54,7 @@ symbol_t* create_symbol(node*, bool, bool, paramtypes_t*);
 bool insert_symbol(table_t*, symbol_t*, bool);
 symbol_t* find_symbol(table_t*, char*, node*, bool);
 symbol_t* find_method(table_t*, char*, paramtypes_t*, node*);
+void free_tables(table_t*);
+void free_symbols(table_t*);
 
 #endif

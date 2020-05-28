@@ -258,3 +258,45 @@ symbol_t* find_method(table_t* table, char* name, paramtypes_t* params, node* ca
     }
     return NULL;
 }
+
+void free_tables(table_t* global){
+    table_t* current = global;
+    table_t* next = current;
+    while (next){
+        current = next;
+
+        free(current->name);
+        free(current->type);
+        free(current->return_type);
+        free_symbols(current);
+
+        next = current->next;
+        free(current);
+    }
+    
+}
+
+void free_symbols(table_t* current){
+    symbol_t* sym = current->first;
+    symbol_t* next = sym;
+    while (next){
+        sym = next;
+
+        free(next->name);
+        free(next->type);
+
+        paramtypes_t* params = sym->paramtypes;
+        paramtypes_t* next_params = params;
+        while(next_params){
+            params = next_params;
+
+            free(params->type);
+
+            next_params = params->next;
+            free(params);
+        }
+
+        next = sym->next;
+        free(sym);
+    }
+}

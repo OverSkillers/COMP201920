@@ -100,11 +100,16 @@ void free_tree(node* n){
 	}
 	if (n->son != NULL){
 		free_tree(n->son);
+		n->son = NULL;
 	}
 	if (n->next != NULL){
 		free_tree(n->next);
+		n->next = NULL;
 	}
 	free(n->name);
+	free(n->type);
+	free(n->annotation);
+	free(n->literal);
 	free(n);
 }
 
