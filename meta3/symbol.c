@@ -1,3 +1,4 @@
+/*João Mendes Nº2016230975*/
 #include <ctype.h>
 #include "symbol.h"
 

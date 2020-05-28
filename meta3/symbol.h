@@ -1,3 +1,4 @@
+/*João Mendes Nº2016230975*/
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
